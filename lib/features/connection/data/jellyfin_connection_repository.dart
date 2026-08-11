@@ -217,7 +217,10 @@ final class JellyfinConnectionRepository implements ConnectionRepository {
     final product = _requiredString(body, 'ProductName');
     final version = _requiredString(body, 'Version');
     final major = int.tryParse(version.split('.').first);
-    if (product.toLowerCase() != 'jellyfin' || major == null || major < 10) {
+    const supportedProducts = <String>{'jellyfin', 'jellyfin server'};
+    if (!supportedProducts.contains(product.toLowerCase()) ||
+        major == null ||
+        major < 10) {
       throw const IncompatibleServerFailure();
     }
     final serverName = body['ServerName'];
