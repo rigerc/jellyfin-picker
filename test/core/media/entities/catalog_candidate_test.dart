@@ -2,6 +2,34 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
 
 void main() {
+  test(
+    'should build bounded image variants while preserving the cache tag',
+    () {
+      final image = CatalogImage(
+        uri: Uri.parse(
+          'https://example.test/Items/movie-1/Images/Primary?tag=poster-tag',
+        ),
+        isFallback: false,
+        aspectRatio: 0.67,
+      );
+
+      final preview = image.variantUri(maxWidth: 48, quality: 35, blur: 20);
+      final display = image.variantUri(maxWidth: 600, quality: 90);
+
+      expect(preview?.queryParameters, <String, String>{
+        'tag': 'poster-tag',
+        'maxWidth': '48',
+        'quality': '35',
+        'blur': '20',
+      });
+      expect(display?.queryParameters, <String, String>{
+        'tag': 'poster-tag',
+        'maxWidth': '600',
+        'quality': '90',
+      });
+    },
+  );
+
   test('should replace only favorite when copying a candidate', () {
     final candidate = CatalogCandidate(
       id: 'movie-1',

@@ -15,6 +15,21 @@ final class CatalogImage {
   final Uri? uri;
   final bool isFallback;
   final double aspectRatio;
+
+  Uri? variantUri({required int maxWidth, required int quality, int? blur}) {
+    final source = uri;
+    if (source == null || isFallback) {
+      return null;
+    }
+    return source.replace(
+      queryParameters: <String, String>{
+        ...source.queryParameters,
+        'maxWidth': '$maxWidth',
+        'quality': '$quality',
+        if (blur != null) 'blur': '$blur',
+      },
+    );
+  }
 }
 
 final class CatalogCandidate {

@@ -46,6 +46,11 @@ abstract final class CandyShapes {
 }
 
 abstract final class CandyImages {
+  static const posterPreviewNetworkWidth = 48;
+  static const posterPreviewQuality = 35;
+  static const posterPreviewBlur = 20;
+  static const posterDisplayNetworkWidth = 600;
+  static const posterDisplayQuality = 90;
   static const posterCacheWidth = 600;
 }
 

@@ -217,6 +217,54 @@ void main() {
     robot.expectThemedHeaderVisible();
     await cubit.close();
   });
+
+  testWidgets('should present discovery as a spacious cinema marquee', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+
+    robot.expectCinemaMarquee(candidateCount: 1);
+    await cubit.close();
+  });
+
+  testWidgets('should separate filter select fields clearly', (tester) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit, textScaler: const TextScaler.linear(2));
+    await robot.openFiltersAtSelects();
+
+    robot.expectFilterSelectSpacing(CandySpacing.compact);
+    await cubit.close();
+  });
+
+  testWidgets('should progressively load bounded blurred poster previews', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[
+      _candidate(
+        poster: CatalogImage(
+          uri: Uri.parse(
+            'https://example.test/Items/movie-1/Images/Primary?tag=poster',
+          ),
+          isFallback: false,
+          aspectRatio: 0.67,
+        ),
+      ),
+    ]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+
+    robot.expectProgressivePoster('movie-1');
+    await cubit.close();
+  });
 }
 
 Future<void> _pumpPage(
@@ -265,7 +313,7 @@ final class _ImmediateDiscoveryStore implements DiscoveryStore {
   }
 }
 
-CatalogCandidate _candidate() => CatalogCandidate(
+CatalogCandidate _candidate({CatalogImage? poster}) => CatalogCandidate(
   id: 'movie-1',
   name: 'Candy Comet',
   mediaType: CatalogMediaType.movie,
@@ -280,6 +328,6 @@ CatalogCandidate _candidate() => CatalogCandidate(
   cast: const <String>['Ava Actor', 'Sam Star'],
   watched: false,
   favorite: false,
-  poster: const CatalogImage.fallback(),
+  poster: poster ?? const CatalogImage.fallback(),
   backdrop: const CatalogImage.fallback(),
 );

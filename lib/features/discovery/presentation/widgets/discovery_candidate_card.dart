@@ -98,16 +98,49 @@ final class _Poster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uri = candidate.poster.uri;
-    if (uri == null || candidate.poster.isFallback) {
+    final previewUri = candidate.poster.variantUri(
+      maxWidth: CandyImages.posterPreviewNetworkWidth,
+      quality: CandyImages.posterPreviewQuality,
+      blur: CandyImages.posterPreviewBlur,
+    );
+    final displayUri = candidate.poster.variantUri(
+      maxWidth: CandyImages.posterDisplayNetworkWidth,
+      quality: CandyImages.posterDisplayQuality,
+    );
+    if (previewUri == null || displayUri == null) {
       return const _PosterFallback();
     }
-    return Image.network(
-      uri.toString(),
-      headers: headers,
-      fit: BoxFit.cover,
-      cacheWidth: CandyImages.posterCacheWidth,
-      errorBuilder: (context, error, stackTrace) => const _PosterFallback(),
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    return Stack(
+      fit: StackFit.expand,
+      children: <Widget>[
+        Image.network(
+          previewUri.toString(),
+          headers: headers,
+          fit: BoxFit.cover,
+          cacheWidth: CandyImages.posterPreviewNetworkWidth,
+          filterQuality: FilterQuality.low,
+          errorBuilder: (context, error, stackTrace) => const _PosterFallback(),
+        ),
+        Image.network(
+          displayUri.toString(),
+          headers: headers,
+          fit: BoxFit.cover,
+          cacheWidth: CandyImages.posterCacheWidth,
+          frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+            if (wasSynchronouslyLoaded) {
+              return child;
+            }
+            return AnimatedOpacity(
+              opacity: frame == null ? 0 : 1,
+              duration: reduceMotion ? Duration.zero : CandyMotion.quick,
+              curve: Curves.easeOutCubic,
+              child: child,
+            );
+          },
+          errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 }

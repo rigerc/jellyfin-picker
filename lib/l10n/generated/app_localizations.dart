@@ -271,8 +271,14 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryTitle.
   ///
   /// In en, this message translates to:
-  /// **'Pick something great'**
+  /// **'Movie night starts here'**
   String get discoveryTitle;
+
+  /// No description provided for @discoveryHeaderSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 title ready to explore.} other{{count} titles ready to explore.}}'**
+  String discoveryHeaderSubtitle(int count);
 
   /// No description provided for @discoveryGridLabel.
   ///
@@ -381,6 +387,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filters'**
   String get discoveryFiltersLabel;
+
+  /// No description provided for @discoveryFilterSheetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shape tonight\'s lineup'**
+  String get discoveryFilterSheetTitle;
+
+  /// No description provided for @discoveryFineTuneFiltersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fine-tune your picks'**
+  String get discoveryFineTuneFiltersLabel;
+
+  /// No description provided for @discoveryLibraryDetailsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Library details'**
+  String get discoveryLibraryDetailsLabel;
 
   /// No description provided for @discoveryApplyFiltersLabel.
   ///

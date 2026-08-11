@@ -110,7 +110,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectionExploreLabel => 'Explore library';
 
   @override
-  String get discoveryTitle => 'Pick something great';
+  String get discoveryTitle => 'Movie night starts here';
+
+  @override
+  String discoveryHeaderSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count titles ready to explore.',
+      one: '1 title ready to explore.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get discoveryGridLabel => 'Grid';
@@ -170,6 +181,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoveryFiltersLabel => 'Filters';
+
+  @override
+  String get discoveryFilterSheetTitle => 'Shape tonight\'s lineup';
+
+  @override
+  String get discoveryFineTuneFiltersLabel => 'Fine-tune your picks';
+
+  @override
+  String get discoveryLibraryDetailsLabel => 'Library details';
 
   @override
   String get discoveryApplyFiltersLabel => 'Show matches';
