@@ -22,6 +22,9 @@ abstract final class WidgetKeys {
   static const discoveryGrid = Key('discovery-grid');
   static const discoverySwipeDeck = Key('discovery-swipe-deck');
   static const discoveryShuffle = Key('discovery-shuffle');
+  static const discoveryShufflePlaceholder = Key(
+    'discovery-shuffle-placeholder',
+  );
   static const discoveryRevealButton = Key('discovery-reveal-button');
   static const discoveryDetails = Key('discovery-details');
   static const discoveryClearButton = Key('discovery-clear-button');
@@ -34,6 +37,9 @@ abstract final class WidgetKeys {
   static const discoverySavePreset = Key('discovery-save-preset');
 
   static Key discoveryCandidate(String id) => Key('discovery-candidate-$id');
+
+  static Key discoveryShuffleCandidate(String id) =>
+      Key('discovery-shuffle-candidate-$id');
 
   static Key discoveryFavorite(String id) => Key('discovery-favorite-$id');
 }

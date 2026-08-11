@@ -23,6 +23,7 @@ final class ConnectionRobot {
       find.byKey(WidgetKeys.connectionConfirmPrivateHttpButton),
       findsOneWidget,
     );
+    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
   }
 
   void expectPrivateHttpWarningAbsent() {
@@ -53,6 +54,8 @@ final class ConnectionRobot {
     final passwordController = tester
         .widget<TextField>(find.byKey(WidgetKeys.connectionPasswordField))
         .controller;
+    await tester.drag(find.byType(ListView), const Offset(0, -240));
+    await tester.pump();
     await tester.tap(find.byKey(WidgetKeys.connectionConfirmPrivateHttpButton));
     await tester.pumpAndSettle();
     expect(passwordController?.text, isEmpty);
@@ -60,10 +63,12 @@ final class ConnectionRobot {
 
   void expectErrorVisible() {
     expect(find.byKey(WidgetKeys.connectionError), findsOneWidget);
+    expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
   }
 
   void expectSummaryVisible() {
     expect(find.byKey(WidgetKeys.connectionSummary), findsOneWidget);
+    expect(find.byIcon(Icons.check_circle_outline_rounded), findsOneWidget);
   }
 
   void expectFormAbsent() {

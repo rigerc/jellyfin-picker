@@ -12,6 +12,9 @@ abstract final class CandyColors {
   static const mint = Color(0xFF6BCB77);
   static const berry = Color(0xFFD1495B);
   static const amber = Color(0xFFF4A261);
+  static const darkCanvas = Color(0xFF19151F);
+  static const darkPaper = Color(0xFF2A2330);
+  static const darkInk = Color(0xFFFFF7ED);
 }
 
 /// Shared spacing values used by the app shell and future features.
@@ -21,6 +24,17 @@ abstract final class CandySpacing {
   static const cardGap = 16.0;
   static const section = 32.0;
   static const minimumTouchTarget = 48.0;
+}
+
+/// Responsive layout constraints shared by focused content surfaces.
+abstract final class CandyLayout {
+  static const contentMaxWidth = 560.0;
+}
+
+/// Semantic icon sizes for branded and stateful illustrations.
+abstract final class CandyIconSize {
+  static const hero = 64.0;
+  static const status = 48.0;
 }
 
 /// Shared corner-radius values used by the candy collage.
@@ -91,9 +105,42 @@ final class CandyThemeTokens extends ThemeExtension<CandyThemeTokens> {
   }
 }
 
-/// Builds the Material 3 theme for the app shell.
-ThemeData buildCandyTheme() {
-  final baseTextTheme = ThemeData.light().textTheme;
+/// Builds the light Material 3 theme for the app shell.
+ThemeData buildCandyLightTheme() => buildCandyTheme();
+
+/// Builds the dark Material 3 theme for the app shell.
+ThemeData buildCandyDarkTheme() => buildCandyTheme(brightness: Brightness.dark);
+
+/// Builds a Material 3 theme for the requested appearance.
+ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
+  final isDark = brightness == Brightness.dark;
+  final colorScheme = isDark
+      ? const ColorScheme.dark(
+          primary: CandyColors.coral,
+          onPrimary: CandyColors.ink,
+          secondary: CandyColors.orange,
+          onSecondary: CandyColors.ink,
+          tertiary: CandyColors.aqua,
+          onTertiary: CandyColors.ink,
+          surface: CandyColors.darkCanvas,
+          onSurface: CandyColors.darkInk,
+          error: CandyColors.berry,
+          onError: CandyColors.ink,
+        )
+      : const ColorScheme.light(
+          primary: CandyColors.coral,
+          onPrimary: CandyColors.ink,
+          secondary: CandyColors.orange,
+          onSecondary: CandyColors.ink,
+          tertiary: CandyColors.aqua,
+          onTertiary: CandyColors.ink,
+          surface: CandyColors.canvas,
+          onSurface: CandyColors.ink,
+          error: CandyColors.berry,
+          onError: CandyColors.ink,
+        );
+  final baseTextTheme =
+      (isDark ? ThemeData.dark() : ThemeData.light()).textTheme;
   final textTheme = baseTextTheme.copyWith(
     displayLarge: baseTextTheme.displayLarge?.copyWith(
       fontFamily: CandyTypography.display,
@@ -134,27 +181,102 @@ ThemeData buildCandyTheme() {
   );
 
   return ThemeData(
+    brightness: brightness,
     useMaterial3: true,
-    scaffoldBackgroundColor: CandyColors.canvas,
-    colorScheme: const ColorScheme.light(
-      primary: CandyColors.coral,
-      onPrimary: CandyColors.ink,
-      secondary: CandyColors.orange,
-      onSecondary: CandyColors.ink,
-      tertiary: CandyColors.aqua,
-      onTertiary: CandyColors.ink,
-      surface: CandyColors.canvas,
-      onSurface: CandyColors.ink,
-      error: CandyColors.berry,
-      onError: CandyColors.ink,
+    scaffoldBackgroundColor: colorScheme.surface,
+    colorScheme: colorScheme,
+    cardTheme: CardThemeData(
+      color: isDark ? CandyColors.darkPaper : CandyColors.paper,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(CandyShapes.card),
+      ),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: isDark ? CandyColors.darkPaper : CandyColors.paper,
+      modalBackgroundColor: isDark ? CandyColors.darkPaper : CandyColors.paper,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(CandyShapes.card),
+        ),
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: isDark ? CandyColors.darkPaper : CandyColors.paper,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(CandyShapes.card),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: colorScheme.surfaceContainerHighest,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: CandySpacing.cardGap,
+        vertical: CandySpacing.compact,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(CandyShapes.card),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(CandyShapes.card),
+        borderSide: BorderSide(color: colorScheme.outlineVariant),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(CandyShapes.card),
+        borderSide: BorderSide(color: colorScheme.primary),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll<Size>(
+          Size(0, CandySpacing.minimumTouchTarget),
+        ),
+        shape: const WidgetStatePropertyAll<OutlinedBorder>(StadiumBorder()),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll<Size>(
+          Size(0, CandySpacing.minimumTouchTarget),
+        ),
+        shape: const WidgetStatePropertyAll<OutlinedBorder>(StadiumBorder()),
+      ),
+    ),
+    iconButtonTheme: const IconButtonThemeData(
+      style: ButtonStyle(
+        minimumSize: WidgetStatePropertyAll<Size>(
+          Size.square(CandySpacing.minimumTouchTarget),
+        ),
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        minimumSize: const WidgetStatePropertyAll<Size>(
+          Size(0, CandySpacing.minimumTouchTarget),
+        ),
+        shape: const WidgetStatePropertyAll<OutlinedBorder>(StadiumBorder()),
+        side: WidgetStatePropertyAll<BorderSide>(
+          BorderSide(color: colorScheme.outlineVariant),
+        ),
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: colorScheme.inverseSurface,
+      contentTextStyle: textTheme.bodyMedium?.copyWith(
+        color: colorScheme.onInverseSurface,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(CandyShapes.card),
+      ),
     ),
     textTheme: textTheme.apply(
-      bodyColor: CandyColors.ink,
-      displayColor: CandyColors.ink,
+      bodyColor: colorScheme.onSurface,
+      displayColor: colorScheme.onSurface,
     ),
-    extensions: const <ThemeExtension<dynamic>>[
+    extensions: <ThemeExtension<dynamic>>[
       CandyThemeTokens(
-        canvas: CandyColors.canvas,
+        canvas: colorScheme.surface,
         cardRadius: CandyShapes.card,
         standardMotion: CandyMotion.standard,
       ),

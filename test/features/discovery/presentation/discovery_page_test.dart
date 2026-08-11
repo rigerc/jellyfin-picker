@@ -151,6 +151,72 @@ void main() {
     expect(dismissible.resizeDuration, Duration.zero);
     await cubit.close();
   });
+
+  testWidgets('should animate discovery mode changes when motion is enabled', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+
+    robot.expectModeTransitionDuration(CandyMotion.standard);
+    await cubit.close();
+  });
+
+  testWidgets('should remove mode animation when reduced motion is active', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit, disableAnimations: true);
+
+    robot.expectModeTransitionDuration(Duration.zero);
+    await cubit.close();
+  });
+
+  testWidgets('should animate a newly revealed shuffle candidate', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+    await robot.openShuffle();
+
+    robot.expectRevealTransitionDuration(CandyMotion.standard);
+    await cubit.close();
+  });
+
+  testWidgets('should give discovery cards tactile press feedback', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+
+    robot.expectCandidateUsesPressBounce('movie-1');
+    await cubit.close();
+  });
+
+  testWidgets('should group discovery controls on a themed header surface', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+
+    robot.expectThemedHeaderVisible();
+    await cubit.close();
+  });
 }
 
 Future<void> _pumpPage(

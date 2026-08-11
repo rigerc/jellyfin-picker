@@ -64,7 +64,6 @@ final class _ConnectionFormState extends State<_ConnectionForm> {
     final localization = AppLocalizations.of(context);
     final state = context.watch<ConnectionCubit>().state;
     final theme = Theme.of(context);
-    final tokens = theme.extension<CandyThemeTokens>();
     final isSubmitting = state is ConnectionSubmitting;
     final needsPrivateHttpConfirmation =
         state is ConnectionNeedsPrivateHttpConfirmation;
@@ -87,45 +86,60 @@ final class _ConnectionFormState extends State<_ConnectionForm> {
         child: ListView(
           padding: const EdgeInsets.all(CandySpacing.page),
           children: <Widget>[
-            Text(
-              localization.connectionTitle,
-              style: theme.textTheme.headlineMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: CandySpacing.section),
-            Card(
-              key: WidgetKeys.connectionForm,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  tokens?.cardRadius ?? CandyShapes.card,
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: CandyLayout.contentMaxWidth,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    spacing: CandySpacing.compact,
+                    children: <Widget>[
+                      Text(
+                        localization.connectionTitle,
+                        style: theme.textTheme.headlineMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: CandySpacing.compact),
+                      Card(
+                        key: WidgetKeys.connectionForm,
+                        child: Padding(
+                          padding: const EdgeInsets.all(CandySpacing.page),
+                          child: Column(
+                            spacing: CandySpacing.compact,
+                            children: <Widget>[
+                              _ServerUrlField(controller: _serverUrlController),
+                              _UsernameField(controller: _usernameController),
+                              _PasswordField(controller: _passwordController),
+                              _SubmitButton(
+                                isSubmitting: isSubmitting,
+                                onPressed: _submit,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (needsPrivateHttpConfirmation)
+                        _PrivateHttpWarning(onConfirm: _confirmPrivateHttp),
+                      if (connectionFailure != null)
+                        _ConnectionError(
+                          message: _failureMessage(
+                            localization,
+                            connectionFailure,
+                          ),
+                        ),
+                      if (needsReauthentication)
+                        _ConnectionError(
+                          message:
+                              localization.connectionNeedsReauthenticationLabel,
+                        ),
+                    ],
+                  ),
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(CandySpacing.page),
-                child: Column(
-                  spacing: CandySpacing.compact,
-                  children: <Widget>[
-                    _ServerUrlField(controller: _serverUrlController),
-                    _UsernameField(controller: _usernameController),
-                    _PasswordField(controller: _passwordController),
-                    _SubmitButton(
-                      isSubmitting: isSubmitting,
-                      onPressed: _submit,
-                    ),
-                  ],
-                ),
-              ),
             ),
-            if (needsPrivateHttpConfirmation)
-              _PrivateHttpWarning(onConfirm: _confirmPrivateHttp),
-            if (connectionFailure != null)
-              _ConnectionError(
-                message: _failureMessage(localization, connectionFailure),
-              ),
-            if (needsReauthentication)
-              _ConnectionError(
-                message: localization.connectionNeedsReauthenticationLabel,
-              ),
           ],
         ),
       ),
@@ -187,39 +201,65 @@ final class _AuthenticatedSummary extends StatelessWidget {
     final theme = Theme.of(context);
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: Card(
-            key: WidgetKeys.connectionSummary,
-            margin: const EdgeInsets.all(CandySpacing.page),
-            child: Padding(
-              padding: const EdgeInsets.all(CandySpacing.page),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                spacing: CandySpacing.compact,
-                children: <Widget>[
-                  Text(
-                    localization.connectionSummaryTitle,
-                    style: theme.textTheme.headlineSmall,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(CandySpacing.page),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: CandyLayout.contentMaxWidth,
+              ),
+              child: Card(
+                key: WidgetKeys.connectionSummary,
+                child: Padding(
+                  padding: const EdgeInsets.all(CandySpacing.page),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: CandySpacing.compact,
+                    children: <Widget>[
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.check_circle_outline_rounded,
+                          size: CandyIconSize.status,
+                          color: theme.colorScheme.tertiary,
+                        ),
+                      ),
+                      Text(
+                        localization.connectionSummaryTitle,
+                        style: theme.textTheme.headlineSmall,
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        '${localization.connectionSummaryServerLabel}: ${summary.serverUrl}',
+                        style: theme.textTheme.bodyLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        '${localization.connectionSummaryUserLabel}: ${summary.username}',
+                        style: theme.textTheme.bodyLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      if (onExplore != null)
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton.icon(
+                            key: WidgetKeys.connectionExploreButton,
+                            onPressed: onExplore,
+                            icon: const Icon(Icons.explore_outlined),
+                            label: Text(localization.connectionExploreLabel),
+                          ),
+                        ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.tonal(
+                          key: WidgetKeys.connectionLogoutButton,
+                          onPressed: () =>
+                              context.read<ConnectionCubit>().logout(),
+                          child: Text(localization.connectionLogoutLabel),
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    '${localization.connectionSummaryServerLabel}: ${summary.serverUrl}',
-                  ),
-                  Text(
-                    '${localization.connectionSummaryUserLabel}: ${summary.username}',
-                  ),
-                  if (onExplore != null)
-                    FilledButton.icon(
-                      key: WidgetKeys.connectionExploreButton,
-                      onPressed: onExplore,
-                      icon: const Icon(Icons.explore_outlined),
-                      label: Text(localization.connectionExploreLabel),
-                    ),
-                  FilledButton.tonal(
-                    key: WidgetKeys.connectionLogoutButton,
-                    onPressed: () => context.read<ConnectionCubit>().logout(),
-                    child: Text(localization.connectionLogoutLabel),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -317,17 +357,41 @@ final class _PrivateHttpWarning extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     return Card(
+      color: theme.colorScheme.secondaryContainer,
       child: Padding(
         padding: const EdgeInsets.all(CandySpacing.page),
-        child: Column(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           spacing: CandySpacing.compact,
           children: <Widget>[
-            Text(localization.connectionPrivateHttpWarning),
-            FilledButton.tonal(
-              key: WidgetKeys.connectionConfirmPrivateHttpButton,
-              onPressed: onConfirm,
-              child: Text(localization.connectionContinuePrivateHttpLabel),
+            ExcludeSemantics(
+              child: Icon(
+                Icons.warning_amber_rounded,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: CandySpacing.compact,
+                children: <Widget>[
+                  Text(
+                    localization.connectionPrivateHttpWarning,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: theme.colorScheme.onSecondaryContainer,
+                    ),
+                  ),
+                  FilledButton.tonal(
+                    key: WidgetKeys.connectionConfirmPrivateHttpButton,
+                    onPressed: onConfirm,
+                    child: Text(
+                      localization.connectionContinuePrivateHttpLabel,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -345,10 +409,38 @@ final class _ConnectionError extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       key: WidgetKeys.connectionError,
+      container: true,
+      excludeSemantics: true,
       liveRegion: true,
+      label: message,
       child: Padding(
         padding: const EdgeInsets.only(top: CandySpacing.compact),
-        child: Text(message, textAlign: TextAlign.center),
+        child: Card(
+          color: Theme.of(context).colorScheme.errorContainer,
+          child: Padding(
+            padding: const EdgeInsets.all(CandySpacing.page),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: CandySpacing.compact,
+              children: <Widget>[
+                ExcludeSemantics(
+                  child: Icon(
+                    Icons.error_outline_rounded,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -83,7 +83,9 @@ final class _JellyfinPickerAppState extends State<JellyfinPickerApp> {
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       routerConfig: widget.router,
-      theme: buildCandyTheme(),
+      theme: buildCandyLightTheme(),
+      darkTheme: buildCandyDarkTheme(),
+      themeMode: ThemeMode.system,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
     );
