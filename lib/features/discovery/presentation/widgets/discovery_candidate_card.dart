@@ -14,12 +14,14 @@ final class DiscoveryCandidateCard extends StatelessWidget {
     required this.candidate,
     this.onToggleFavorite,
     this.imageHeaders = const <String, String>{},
+    this.posterFit = BoxFit.cover,
     super.key,
   });
 
   final CatalogCandidate candidate;
   final FavoriteToggle? onToggleFavorite;
   final Map<String, String> imageHeaders;
+  final BoxFit posterFit;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +38,11 @@ final class DiscoveryCandidateCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Expanded(
-                child: _Poster(candidate: candidate, headers: imageHeaders),
+                child: _Poster(
+                  candidate: candidate,
+                  headers: imageHeaders,
+                  fit: posterFit,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.all(CandySpacing.compact),
@@ -91,10 +97,15 @@ final class DiscoveryCandidateCard extends StatelessWidget {
 }
 
 final class _Poster extends StatelessWidget {
-  const _Poster({required this.candidate, required this.headers});
+  const _Poster({
+    required this.candidate,
+    required this.headers,
+    required this.fit,
+  });
 
   final CatalogCandidate candidate;
   final Map<String, String> headers;
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +128,7 @@ final class _Poster extends StatelessWidget {
         Image.network(
           previewUri.toString(),
           headers: headers,
-          fit: BoxFit.cover,
+          fit: fit,
           cacheWidth: CandyImages.posterPreviewNetworkWidth,
           filterQuality: FilterQuality.low,
           errorBuilder: (context, error, stackTrace) => const _PosterFallback(),
@@ -125,7 +136,7 @@ final class _Poster extends StatelessWidget {
         Image.network(
           displayUri.toString(),
           headers: headers,
-          fit: BoxFit.cover,
+          fit: fit,
           cacheWidth: CandyImages.posterCacheWidth,
           frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
             if (wasSynchronouslyLoaded) {

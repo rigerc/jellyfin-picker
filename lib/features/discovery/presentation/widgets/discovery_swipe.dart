@@ -45,6 +45,7 @@ final class DiscoverySwipe extends StatelessWidget {
               candidate: candidate,
               onToggleFavorite: onToggleFavorite,
               imageHeaders: imageHeaders,
+              posterFit: BoxFit.contain,
             ),
           ),
         ),
