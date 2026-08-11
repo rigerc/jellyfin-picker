@@ -25,6 +25,9 @@ void main() {
       expect(CandySpacing.page, 24);
       expect(CandyShapes.card, 20);
       expect(CandyMotion.standard, const Duration(milliseconds: 300));
+      expect(CandyLayout.contentMaxWidth, 560);
+      expect(CandyIconSize.hero, 64);
+      expect(CandyIconSize.status, 48);
     },
   );
 
@@ -42,6 +45,44 @@ void main() {
     expect(theme.textTheme.bodyLarge?.fontFamily, CandyTypography.body);
     expect(theme.textTheme.bodyLarge?.height, CandyTypography.bodyLineHeight);
   });
+
+  test('should style primary controls through the shared component theme', () {
+    final theme = buildCandyLightTheme();
+    final states = <WidgetState>{};
+
+    expect(theme.inputDecorationTheme.filled, isTrue);
+    expect(
+      theme.filledButtonTheme.style?.minimumSize?.resolve(states)?.height,
+      CandySpacing.minimumTouchTarget,
+    );
+    expect(
+      theme.iconButtonTheme.style?.minimumSize?.resolve(states)?.width,
+      CandySpacing.minimumTouchTarget,
+    );
+    expect(theme.segmentedButtonTheme.style, isNotNull);
+  });
+
+  test('should build a dark material three theme with dark semantic roles', () {
+    final theme = buildCandyDarkTheme();
+
+    expect(theme.brightness, Brightness.dark);
+    expect(theme.colorScheme.brightness, Brightness.dark);
+    expect(theme.colorScheme.surface, isNot(CandyColors.canvas));
+    expect(theme.colorScheme.onSurface, isNot(CandyColors.ink));
+    expect(theme.scaffoldBackgroundColor, theme.colorScheme.surface);
+    expect(theme.textTheme.bodyLarge?.color, theme.colorScheme.onSurface);
+  });
+
+  test(
+    'should preserve the light theme through the explicit light builder',
+    () {
+      final theme = buildCandyLightTheme();
+
+      expect(theme.brightness, Brightness.light);
+      expect(theme.colorScheme.surface, CandyColors.canvas);
+      expect(theme.colorScheme.onSurface, CandyColors.ink);
+    },
+  );
 
   test('should expose installed theme tokens when the theme is requested', () {
     final theme = buildCandyTheme();

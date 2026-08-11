@@ -25,24 +25,36 @@ final class DiscoveryShuffle extends StatelessWidget {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
     final candidate = _revealedCandidate;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Column(
       key: WidgetKeys.discoveryShuffle,
       spacing: CandySpacing.compact,
       children: <Widget>[
         Expanded(
-          child: candidate == null
-              ? Center(
-                  child: Icon(
-                    Icons.casino_outlined,
-                    size: CandySpacing.minimumTouchTarget,
-                    semanticLabel: localization.discoveryShuffleLabel,
+          child: AnimatedSwitcher(
+            duration: reduceMotion ? Duration.zero : CandyMotion.standard,
+            switchInCurve: Curves.elasticOut,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) => ScaleTransition(
+              scale: animation,
+              child: FadeTransition(opacity: animation, child: child),
+            ),
+            child: candidate == null
+                ? Center(
+                    key: WidgetKeys.discoveryShufflePlaceholder,
+                    child: Icon(
+                      Icons.casino_outlined,
+                      size: CandySpacing.minimumTouchTarget,
+                      semanticLabel: localization.discoveryShuffleLabel,
+                    ),
+                  )
+                : DiscoveryCandidateCard(
+                    key: WidgetKeys.discoveryShuffleCandidate(candidate.id),
+                    candidate: candidate,
+                    onToggleFavorite: onToggleFavorite,
+                    imageHeaders: imageHeaders,
                   ),
-                )
-              : DiscoveryCandidateCard(
-                  candidate: candidate,
-                  onToggleFavorite: onToggleFavorite,
-                  imageHeaders: imageHeaders,
-                ),
+          ),
         ),
         SizedBox(
           width: double.infinity,

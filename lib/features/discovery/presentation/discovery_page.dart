@@ -49,6 +49,7 @@ final class _DiscoveryView extends StatelessWidget {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Scaffold(
       key: WidgetKeys.discoveryPage,
       body: SafeArea(
@@ -57,51 +58,71 @@ final class _DiscoveryView extends StatelessWidget {
           child: Column(
             spacing: CandySpacing.compact,
             children: <Widget>[
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: Text(
-                      localization.discoveryTitle,
-                      style: theme.textTheme.headlineMedium,
-                    ),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: CandySpacing.compact,
                   ),
-                  IconButton(
-                    key: WidgetKeys.discoveryFilterButton,
-                    tooltip: localization.discoveryFiltersLabel,
-                    onPressed: () => showDiscoveryFilters(
-                      context,
-                      context.read<DiscoveryCubit>().state.filter,
-                    ),
-                    icon: const Icon(Icons.tune_rounded),
+                  child: Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          localization.discoveryTitle,
+                          style: theme.textTheme.headlineMedium,
+                        ),
+                      ),
+                      IconButton(
+                        key: WidgetKeys.discoveryFilterButton,
+                        tooltip: localization.discoveryFiltersLabel,
+                        onPressed: () => showDiscoveryFilters(
+                          context,
+                          context.read<DiscoveryCubit>().state.filter,
+                        ),
+                        icon: const Icon(Icons.tune_rounded),
+                      ),
+                      IconButton(
+                        key: WidgetKeys.discoveryClearButton,
+                        tooltip: localization.discoveryClearLabel,
+                        onPressed: () => _confirmClear(context),
+                        icon: const Icon(Icons.delete_sweep_outlined),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    key: WidgetKeys.discoveryClearButton,
-                    tooltip: localization.discoveryClearLabel,
-                    onPressed: () => _confirmClear(context),
-                    icon: const Icon(Icons.delete_sweep_outlined),
-                  ),
-                ],
+                ),
               ),
               const DiscoveryModeSelector(),
               Expanded(
                 child: BlocBuilder<DiscoveryCubit, DiscoveryState>(
-                  builder: (context, state) => switch (state.mode) {
-                    DiscoveryMode.grid => DiscoveryGrid(
-                      candidates: state.filteredCandidates,
-                      onToggleFavorite: onToggleFavorite,
-                      imageHeaders: imageHeaders,
+                  builder: (context, state) => AnimatedSwitcher(
+                    duration: reduceMotion
+                        ? Duration.zero
+                        : CandyMotion.standard,
+                    switchInCurve: Curves.easeOutBack,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) =>
+                        FadeTransition(opacity: animation, child: child),
+                    child: KeyedSubtree(
+                      key: ValueKey<DiscoveryMode>(state.mode),
+                      child: switch (state.mode) {
+                        DiscoveryMode.grid => DiscoveryGrid(
+                          candidates: state.filteredCandidates,
+                          onToggleFavorite: onToggleFavorite,
+                          imageHeaders: imageHeaders,
+                        ),
+                        DiscoveryMode.swipe => DiscoverySwipe(
+                          candidates: state.undecidedCandidates,
+                          onToggleFavorite: onToggleFavorite,
+                          imageHeaders: imageHeaders,
+                        ),
+                        DiscoveryMode.shuffle => DiscoveryShuffle(
+                          state: state,
+                          onToggleFavorite: onToggleFavorite,
+                          imageHeaders: imageHeaders,
+                        ),
+                      },
                     ),
-                    DiscoveryMode.swipe => DiscoverySwipe(
-                      candidates: state.undecidedCandidates,
-                      onToggleFavorite: onToggleFavorite,
-                      imageHeaders: imageHeaders,
-                    ),
-                    DiscoveryMode.shuffle => DiscoveryShuffle(
-                      state: state,
-                      onToggleFavorite: onToggleFavorite,
-                      imageHeaders: imageHeaders,
-                    ),
-                  },
+                  ),
                 ),
               ),
             ],

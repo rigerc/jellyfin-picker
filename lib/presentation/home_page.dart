@@ -14,29 +14,46 @@ final class HomePage extends StatelessWidget {
     return Scaffold(
       key: WidgetKeys.appShell,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(CandySpacing.page),
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: CandySpacing.compact,
-              children: <Widget>[
-                Text(
-                  localization.appTitle,
-                  style: theme.textTheme.titleLarge,
-                  textAlign: TextAlign.center,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: CandyLayout.contentMaxWidth,
+              ),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(CandySpacing.section),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: CandySpacing.compact,
+                    children: <Widget>[
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.movie_filter_rounded,
+                          size: CandyIconSize.hero,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      Text(
+                        localization.appTitle,
+                        style: theme.textTheme.titleLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        localization.homeHeadline,
+                        style: theme.textTheme.displaySmall,
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        localization.homeDescription,
+                        style: theme.textTheme.bodyLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
-                Text(
-                  localization.homeHeadline,
-                  style: theme.textTheme.displaySmall,
-                  textAlign: TextAlign.center,
-                ),
-                Text(
-                  localization.homeDescription,
-                  style: theme.textTheme.bodyLarge,
-                  textAlign: TextAlign.center,
-                ),
-              ],
+              ),
             ),
           ),
         ),

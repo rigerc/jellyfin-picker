@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
+import 'package:jellyfin_picker/core/widgets/candy_bounce.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/discovery_page.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_details_sheet.dart';
@@ -24,14 +25,13 @@ final class DiscoveryCandidateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Semantics(
-        button: true,
-        label: localization.discoveryDetailsLabel(candidate.name),
-        child: InkWell(
-          key: WidgetKeys.discoveryCandidate(candidate.id),
-          onTap: () => showDiscoveryDetails(context, candidate),
+    return Semantics(
+      label: localization.discoveryDetailsLabel(candidate.name),
+      child: CandyBounce(
+        key: WidgetKeys.discoveryCandidate(candidate.id),
+        onPressed: () => showDiscoveryDetails(context, candidate),
+        child: Card(
+          clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[

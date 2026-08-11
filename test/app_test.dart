@@ -36,6 +36,17 @@ void main() {
     router.dispose();
   });
 
+  testWidgets('should follow the system appearance by default', (tester) async {
+    final router = buildAppRouter();
+    final robot = AppRobot(tester);
+
+    await tester.pumpWidget(JellyfinPickerApp(router: router));
+
+    robot.expectSystemThemeConfigured();
+
+    router.dispose();
+  });
+
   testWidgets('should restore an authenticated summary and logout to form', (
     tester,
   ) async {

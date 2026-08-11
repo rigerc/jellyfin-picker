@@ -1,6 +1,7 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
+import 'package:jellyfin_picker/core/widgets/candy_bounce.dart';
 
 final class DiscoveryRobot {
   const DiscoveryRobot(this.tester);
@@ -112,5 +113,45 @@ final class DiscoveryRobot {
 
   void expectNoLayoutException() {
     expect(tester.takeException(), isNull);
+  }
+
+  void expectModeTransitionDuration(Duration duration) {
+    final switcher = tester.widget<AnimatedSwitcher>(
+      find
+          .descendant(
+            of: find.byKey(WidgetKeys.discoveryPage),
+            matching: find.byType(AnimatedSwitcher),
+          )
+          .first,
+    );
+    expect(switcher.duration, duration);
+  }
+
+  void expectRevealTransitionDuration(Duration duration) {
+    final switchers = tester.widgetList<AnimatedSwitcher>(
+      find.descendant(
+        of: find.byKey(WidgetKeys.discoveryShuffle),
+        matching: find.byType(AnimatedSwitcher),
+      ),
+    );
+    expect(switchers, hasLength(1));
+    expect(switchers.single.duration, duration);
+  }
+
+  void expectCandidateUsesPressBounce(String id) {
+    expect(
+      tester.widget(find.byKey(WidgetKeys.discoveryCandidate(id))),
+      isA<CandyBounce>(),
+    );
+  }
+
+  void expectThemedHeaderVisible() {
+    expect(
+      find.ancestor(
+        of: find.byKey(WidgetKeys.discoveryFilterButton),
+        matching: find.byType(Card),
+      ),
+      findsOneWidget,
+    );
   }
 }
