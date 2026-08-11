@@ -85,107 +85,144 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
         ),
         children: <Widget>[
           Text(
-            localization.discoveryFiltersLabel,
+            localization.discoveryFilterSheetTitle,
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: CandySpacing.cardGap),
-          Text(localization.discoveryMediaTypeLabel),
-          Wrap(
-            spacing: CandySpacing.compact,
-            children: <Widget>[
-              FilterChip(
-                key: WidgetKeys.discoveryMovieFilter,
-                label: Text(localization.discoveryMoviesLabel),
-                selected: _mediaTypes.contains(CatalogMediaType.movie),
-                onSelected: (selected) =>
-                    _toggleType(CatalogMediaType.movie, selected),
-              ),
-              FilterChip(
-                key: WidgetKeys.discoverySeriesFilter,
-                label: Text(localization.discoverySeriesLabel),
-                selected: _mediaTypes.contains(CatalogMediaType.series),
-                onSelected: (selected) =>
-                    _toggleType(CatalogMediaType.series, selected),
-              ),
-            ],
-          ),
-          Text(
-            localization.discoveryRuntimeFilterLabel(
-              _runtime.start.round(),
-              _runtime.end.round(),
+          _FilterSection(
+            title: localization.discoveryMediaTypeLabel,
+            icon: Icons.local_movies_outlined,
+            child: Wrap(
+              spacing: CandySpacing.compact,
+              runSpacing: CandySpacing.compact,
+              children: <Widget>[
+                FilterChip(
+                  key: WidgetKeys.discoveryMovieFilter,
+                  label: Text(localization.discoveryMoviesLabel),
+                  selected: _mediaTypes.contains(CatalogMediaType.movie),
+                  onSelected: (selected) =>
+                      _toggleType(CatalogMediaType.movie, selected),
+                ),
+                FilterChip(
+                  key: WidgetKeys.discoverySeriesFilter,
+                  label: Text(localization.discoverySeriesLabel),
+                  selected: _mediaTypes.contains(CatalogMediaType.series),
+                  onSelected: (selected) =>
+                      _toggleType(CatalogMediaType.series, selected),
+                ),
+              ],
             ),
-          ),
-          RangeSlider(
-            values: _runtime,
-            max: _maximumRuntime,
-            onChanged: (value) => setState(() => _runtime = value),
-          ),
-          Text(
-            localization.discoveryCommunityFilterLabel(
-              _community.toStringAsFixed(1),
-            ),
-          ),
-          Slider(
-            value: _community,
-            max: _maximumCommunity,
-            onChanged: (value) => setState(() => _community = value),
-          ),
-          Text(
-            localization.discoveryCriticFilterLabel(_critic.toStringAsFixed(0)),
-          ),
-          Slider(
-            value: _critic,
-            max: _maximumCritic,
-            onChanged: (value) => setState(() => _critic = value),
-          ),
-          TextField(
-            controller: _genresController,
-            decoration: InputDecoration(
-              labelText: localization.discoveryGenresFilterLabel,
-            ),
-          ),
-          _DecadeField(
-            value: _decade,
-            decades: _decades,
-            onChanged: (value) => setState(() => _decade = value),
-          ),
-          _TriStateField(
-            label: localization.discoveryWatchedFilterLabel,
-            value: _watched,
-            onChanged: (value) => setState(() => _watched = value),
-          ),
-          _TriStateField(
-            label: localization.discoveryFavoriteFilterLabel,
-            value: _favorite,
-            onChanged: (value) => setState(() => _favorite = value),
           ),
           const SizedBox(height: CandySpacing.cardGap),
-          Text(localization.discoveryPresetsLabel),
-          if (presets.isNotEmpty)
-            Wrap(
+          _FilterSection(
+            title: localization.discoveryFineTuneFiltersLabel,
+            icon: Icons.tune_rounded,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: CandySpacing.compact,
-              children: presets.keys
-                  .map(
-                    (name) => ActionChip(
-                      label: Text(name),
-                      onPressed: () => _applyPreset(name),
-                    ),
-                  )
-                  .toList(growable: false),
-            ),
-          TextField(
-            key: WidgetKeys.discoveryPresetName,
-            controller: _presetController,
-            maxLength: 50,
-            decoration: InputDecoration(
-              labelText: localization.discoveryPresetNameLabel,
+              children: <Widget>[
+                Text(
+                  localization.discoveryRuntimeFilterLabel(
+                    _runtime.start.round(),
+                    _runtime.end.round(),
+                  ),
+                ),
+                RangeSlider(
+                  values: _runtime,
+                  max: _maximumRuntime,
+                  onChanged: (value) => setState(() => _runtime = value),
+                ),
+                Text(
+                  localization.discoveryCommunityFilterLabel(
+                    _community.toStringAsFixed(1),
+                  ),
+                ),
+                Slider(
+                  value: _community,
+                  max: _maximumCommunity,
+                  onChanged: (value) => setState(() => _community = value),
+                ),
+                Text(
+                  localization.discoveryCriticFilterLabel(
+                    _critic.toStringAsFixed(0),
+                  ),
+                ),
+                Slider(
+                  value: _critic,
+                  max: _maximumCritic,
+                  onChanged: (value) => setState(() => _critic = value),
+                ),
+              ],
             ),
           ),
-          OutlinedButton.icon(
-            key: WidgetKeys.discoverySavePreset,
-            onPressed: _savePreset,
-            icon: const Icon(Icons.bookmark_add_outlined),
-            label: Text(localization.discoverySavePresetLabel),
+          const SizedBox(height: CandySpacing.cardGap),
+          _FilterSection(
+            title: localization.discoveryLibraryDetailsLabel,
+            icon: Icons.category_outlined,
+            child: Column(
+              spacing: CandySpacing.cardGap,
+              children: <Widget>[
+                TextField(
+                  controller: _genresController,
+                  decoration: InputDecoration(
+                    labelText: localization.discoveryGenresFilterLabel,
+                  ),
+                ),
+                _DecadeField(
+                  value: _decade,
+                  decades: _decades,
+                  onChanged: (value) => setState(() => _decade = value),
+                ),
+                _TriStateField(
+                  label: localization.discoveryWatchedFilterLabel,
+                  value: _watched,
+                  onChanged: (value) => setState(() => _watched = value),
+                ),
+                _TriStateField(
+                  label: localization.discoveryFavoriteFilterLabel,
+                  value: _favorite,
+                  onChanged: (value) => setState(() => _favorite = value),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: CandySpacing.cardGap),
+          _FilterSection(
+            title: localization.discoveryPresetsLabel,
+            icon: Icons.bookmarks_outlined,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: CandySpacing.compact,
+              children: <Widget>[
+                if (presets.isNotEmpty)
+                  Wrap(
+                    spacing: CandySpacing.compact,
+                    runSpacing: CandySpacing.compact,
+                    children: presets.keys
+                        .map(
+                          (name) => ActionChip(
+                            label: Text(name),
+                            onPressed: () => _applyPreset(name),
+                          ),
+                        )
+                        .toList(growable: false),
+                  ),
+                TextField(
+                  key: WidgetKeys.discoveryPresetName,
+                  controller: _presetController,
+                  maxLength: 50,
+                  decoration: InputDecoration(
+                    labelText: localization.discoveryPresetNameLabel,
+                  ),
+                ),
+                OutlinedButton.icon(
+                  key: WidgetKeys.discoverySavePreset,
+                  onPressed: _savePreset,
+                  icon: const Icon(Icons.bookmark_add_outlined),
+                  label: Text(localization.discoverySavePresetLabel),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: CandySpacing.cardGap),
           FilledButton(
@@ -260,6 +297,45 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
     _TriState.yes => true,
     _TriState.no => false,
   };
+}
+
+final class _FilterSection extends StatelessWidget {
+  const _FilterSection({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    child: Padding(
+      padding: const EdgeInsets.all(CandySpacing.cardGap),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: CandySpacing.compact,
+        children: <Widget>[
+          Row(
+            spacing: CandySpacing.compact,
+            children: <Widget>[
+              Icon(icon),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
+          child,
+        ],
+      ),
+    ),
+  );
 }
 
 final class _DecadeField extends StatelessWidget {

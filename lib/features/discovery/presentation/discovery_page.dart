@@ -7,6 +7,7 @@ import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.d
 import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_mode.dart';
 import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_state.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_grid.dart';
+import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_header.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_sheet.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_mode_selector.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_shuffle.dart';
@@ -47,8 +48,6 @@ final class _DiscoveryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localization = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Scaffold(
       key: WidgetKeys.discoveryPage,
@@ -56,39 +55,17 @@ final class _DiscoveryView extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(CandySpacing.page),
           child: Column(
-            spacing: CandySpacing.compact,
+            spacing: CandySpacing.cardGap,
             children: <Widget>[
-              Card(
-                margin: EdgeInsets.zero,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: CandySpacing.compact,
+              BlocSelector<DiscoveryCubit, DiscoveryState, int>(
+                selector: (state) => state.filteredCandidates.length,
+                builder: (context, candidateCount) => DiscoveryHeader(
+                  candidateCount: candidateCount,
+                  onOpenFilters: () => showDiscoveryFilters(
+                    context,
+                    context.read<DiscoveryCubit>().state.filter,
                   ),
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          localization.discoveryTitle,
-                          style: theme.textTheme.headlineMedium,
-                        ),
-                      ),
-                      IconButton(
-                        key: WidgetKeys.discoveryFilterButton,
-                        tooltip: localization.discoveryFiltersLabel,
-                        onPressed: () => showDiscoveryFilters(
-                          context,
-                          context.read<DiscoveryCubit>().state.filter,
-                        ),
-                        icon: const Icon(Icons.tune_rounded),
-                      ),
-                      IconButton(
-                        key: WidgetKeys.discoveryClearButton,
-                        tooltip: localization.discoveryClearLabel,
-                        onPressed: () => _confirmClear(context),
-                        icon: const Icon(Icons.delete_sweep_outlined),
-                      ),
-                    ],
-                  ),
+                  onClear: () => _confirmClear(context),
                 ),
               ),
               const DiscoveryModeSelector(),

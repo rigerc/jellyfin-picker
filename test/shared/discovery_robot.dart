@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
+import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/core/widgets/candy_bounce.dart';
 
 final class DiscoveryRobot {
@@ -95,6 +96,16 @@ final class DiscoveryRobot {
     await tester.pump();
   }
 
+  Future<void> openFiltersAtSelects() async {
+    await tester.tap(find.byKey(WidgetKeys.discoveryFilterButton));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Favorite state'),
+      CandySpacing.section,
+      scrollable: _filterScrollable,
+    );
+  }
+
   void expectCandidateVisible(String name) {
     expect(find.text(name), findsWidgets);
   }
@@ -154,4 +165,73 @@ final class DiscoveryRobot {
       findsOneWidget,
     );
   }
+
+  void expectCinemaMarquee({required int candidateCount}) {
+    expect(find.text('Jellyfin Picker'), findsOneWidget);
+    expect(find.text('Movie night starts here'), findsOneWidget);
+    expect(
+      find.text('$candidateCount title ready to explore.'),
+      findsOneWidget,
+    );
+    expect(find.byIcon(Icons.theaters_rounded), findsOneWidget);
+  }
+
+  void expectFilterSelectSpacing(double minimumGap) {
+    final watched = _inputDecoratorFor('Watched state');
+    final favorite = _inputDecoratorFor('Favorite state');
+    final gap =
+        tester.getTopLeft(favorite).dy - tester.getBottomLeft(watched).dy;
+
+    expect(gap, greaterThanOrEqualTo(minimumGap));
+  }
+
+  void expectProgressivePoster(String id) {
+    final card = find.byKey(WidgetKeys.discoveryCandidate(id));
+    final images = tester
+        .widgetList<Image>(
+          find.descendant(of: card, matching: find.byType(Image)),
+        )
+        .toList(growable: false);
+    final providers = images
+        .map((image) => image.image)
+        .toList(growable: false);
+    final urls = images
+        .map((image) => _networkImageFor(image.image))
+        .map((provider) => Uri.parse(provider.url))
+        .toList(growable: false);
+
+    expect(urls, hasLength(2));
+    expect(
+      providers.whereType<ResizeImage>().map((provider) => provider.width),
+      containsAll(<int>[48, 600]),
+    );
+    expect(
+      urls.map((uri) => uri.queryParameters['maxWidth']),
+      containsAll(<String>['48', '600']),
+    );
+    expect(
+      urls
+          .singleWhere((uri) => uri.queryParameters['maxWidth'] == '48')
+          .queryParameters['blur'],
+      '20',
+    );
+    expect(images.any((image) => image.frameBuilder != null), isTrue);
+  }
+
+  Finder get _filterScrollable => find
+      .descendant(
+        of: find.byKey(WidgetKeys.discoveryFilterSheet),
+        matching: find.byType(Scrollable),
+      )
+      .first;
+
+  Finder _inputDecoratorFor(String label) => find
+      .ancestor(of: find.text(label), matching: find.byType(InputDecorator))
+      .first;
+
+  NetworkImage _networkImageFor(ImageProvider provider) => switch (provider) {
+    ResizeImage(:final imageProvider) => imageProvider as NetworkImage,
+    NetworkImage() => provider,
+    _ => throw TestFailure('Expected a network-backed image provider.'),
+  };
 }
