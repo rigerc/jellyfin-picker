@@ -218,6 +218,32 @@ final class DiscoveryRobot {
     expect(images.any((image) => image.frameBuilder != null), isTrue);
   }
 
+  void expectGridPosterFit(String id, BoxFit fit) {
+    _expectPosterFitIn(WidgetKeys.discoveryGrid, id, fit);
+  }
+
+  void expectSwipePosterFit(String id, BoxFit fit) {
+    _expectPosterFitIn(WidgetKeys.discoverySwipeDeck, id, fit);
+  }
+
+  void expectShufflePosterFit(String id, BoxFit fit) {
+    _expectPosterFitIn(WidgetKeys.discoveryShuffle, id, fit);
+  }
+
+  void _expectPosterFitIn(Key modeKey, String id, BoxFit fit) {
+    final mode = find.byKey(modeKey);
+    final card = find.descendant(
+      of: mode,
+      matching: find.byKey(WidgetKeys.discoveryCandidate(id)),
+    );
+    final images = tester.widgetList<Image>(
+      find.descendant(of: card, matching: find.byType(Image)),
+    );
+
+    expect(images, isNotEmpty);
+    expect(images.map((image) => image.fit), everyElement(fit));
+  }
+
   Finder get _filterScrollable => find
       .descendant(
         of: find.byKey(WidgetKeys.discoveryFilterSheet),

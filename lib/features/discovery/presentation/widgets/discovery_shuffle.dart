@@ -53,6 +53,7 @@ final class DiscoveryShuffle extends StatelessWidget {
                     candidate: candidate,
                     onToggleFavorite: onToggleFavorite,
                     imageHeaders: imageHeaders,
+                    posterFit: BoxFit.contain,
                   ),
           ),
         ),

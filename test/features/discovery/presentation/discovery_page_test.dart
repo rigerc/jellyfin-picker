@@ -248,21 +248,45 @@ void main() {
   ) async {
     final cubit = _cubit();
     await cubit.replaceCandidates(<CatalogCandidate>[
-      _candidate(
-        poster: CatalogImage(
-          uri: Uri.parse(
-            'https://example.test/Items/movie-1/Images/Primary?tag=poster',
-          ),
-          isFallback: false,
-          aspectRatio: 0.67,
-        ),
-      ),
+      _candidate(poster: _networkPoster()),
     ]);
     final robot = DiscoveryRobot(tester);
 
     await _pumpPage(tester, cubit);
 
     robot.expectProgressivePoster('movie-1');
+    robot.expectGridPosterFit('movie-1', BoxFit.cover);
+    await cubit.close();
+  });
+
+  testWidgets('should show the complete poster in swipe mode', (tester) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[
+      _candidate(poster: _networkPoster()),
+    ]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+    await robot.openSwipe();
+
+    robot.expectSwipePosterFit('movie-1', BoxFit.contain);
+    await cubit.close();
+  });
+
+  testWidgets('should show the complete poster in shuffle mode', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[
+      _candidate(poster: _networkPoster()),
+    ]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+    await robot.openShuffle();
+    await robot.reveal();
+
+    robot.expectShufflePosterFit('movie-1', BoxFit.contain);
     await cubit.close();
   });
 }
@@ -330,4 +354,12 @@ CatalogCandidate _candidate({CatalogImage? poster}) => CatalogCandidate(
   favorite: false,
   poster: poster ?? const CatalogImage.fallback(),
   backdrop: const CatalogImage.fallback(),
+);
+
+CatalogImage _networkPoster() => CatalogImage(
+  uri: Uri.parse(
+    'https://example.test/Items/movie-1/Images/Primary?tag=poster',
+  ),
+  isFallback: false,
+  aspectRatio: 0.67,
 );
