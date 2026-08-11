@@ -62,14 +62,60 @@ void main() {
     },
   );
 
+  test(
+    'should accept the official Jellyfin Server 10.11 product identity',
+    () async {
+      final repository = _repositoryWithResponses(<http.Response>[
+        _jsonResponse({
+          'ProductName': 'Jellyfin Server',
+          'Version': '10.11.11',
+        }),
+        _jsonResponse({
+          'AccessToken': 'access-token',
+          'User': <String, Object>{'Id': 'user-id', 'Name': 'alice'},
+        }),
+      ]);
+
+      final result = await repository.connect(_request());
+
+      expect(result, isA<ConnectionSuccess>());
+    },
+  );
+
   test('should reject incompatible servers after the public probe', () async {
     final repository = _repositoryWithResponses(<http.Response>[
-      _jsonResponse({'ProductName': 'Plex', 'Version': '1.0.0'}),
+      _jsonResponse({'ProductName': 'Plex', 'Version': '10.11.11'}),
     ]);
 
     final result = await repository.connect(_request());
 
     expect(result, isA<ConnectionFailureResult>());
+    expect(
+      (result as ConnectionFailureResult).failure,
+      isA<IncompatibleServerFailure>(),
+    );
+  });
+
+  test('should reject unsupported Jellyfin server versions', () async {
+    final repository = _repositoryWithResponses(<http.Response>[
+      _jsonResponse({'ProductName': 'Jellyfin Server', 'Version': '9.0.0'}),
+    ]);
+
+    final result = await repository.connect(_request());
+
+    expect(
+      (result as ConnectionFailureResult).failure,
+      isA<IncompatibleServerFailure>(),
+    );
+  });
+
+  test('should reject malformed Jellyfin server versions', () async {
+    final repository = _repositoryWithResponses(<http.Response>[
+      _jsonResponse({'ProductName': 'Jellyfin Server', 'Version': 'ten'}),
+    ]);
+
+    final result = await repository.connect(_request());
+
     expect(
       (result as ConnectionFailureResult).failure,
       isA<IncompatibleServerFailure>(),
