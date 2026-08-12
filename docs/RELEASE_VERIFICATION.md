@@ -67,7 +67,10 @@ timestamped result log covering:
 
 - HTTPS connection, authentication, secure restore, logout, and reconnect.
 - Rejected public HTTP, confirmed private-LAN HTTP, and rejected invalid TLS.
-- Catalog paging, combined filters, loading, empty, partial, and error states.
+- Catalog paging, title search, recently-added sorting and 7/30/90/365-day
+  windows, combined filters, loading, empty, partial, and error states.
+- Quick recently-added, unwatched, and favorites filters; active-filter reset
+  must preserve presets, likes, rejections, recent picks, and dismissals.
 - Grid, swipe, and shuffle/reveal mode switching with shared session state.
 - Like, reject, favorite add/remove, and watched-state non-mutation.
 - Local state restart, named presets, recent picks, dismissals, and clear data.

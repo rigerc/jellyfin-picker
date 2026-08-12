@@ -32,7 +32,20 @@ void main() {
     final preferences = RecordingBlobPreferences();
     final store = SharedPreferencesDiscoveryStore(preferences);
     const snapshot = DiscoverySnapshot(
-      filter: CatalogFilter(watched: false),
+      filter: CatalogFilter(
+        searchTerm: 'candy',
+        addedWithin: CatalogAddedWindow.ninetyDays,
+        sort: CatalogSort.recentlyAdded,
+        officialRatings: <String>{'PG-13'},
+        seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.continuing},
+        watched: false,
+      ),
+      presets: <String, CatalogFilter>{
+        'Recent': CatalogFilter(
+          addedWithin: CatalogAddedWindow.thirtyDays,
+          favorite: true,
+        ),
+      },
       mode: DiscoveryMode.shuffle,
       rejectedIds: <String>{'movie-2'},
     );

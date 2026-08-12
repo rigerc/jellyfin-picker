@@ -51,6 +51,40 @@ void main() {
     await discoveryCubit.close();
     router.dispose();
   });
+
+  testWidgets('should apply and reset accessible discovery quick filters', (
+    tester,
+  ) async {
+    final discoveryCubit = DiscoveryCubit(
+      store: _MemoryDiscoveryStore(),
+      scopeKey: 'server/user',
+      selector: FakeDiscoverySelector('movie-1'),
+    );
+    await discoveryCubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final router = buildAppRouter(
+      connectionRepository: FakeConnectionRepository(
+        restoreResult: const SessionRestored(_session),
+      ),
+      authenticatedBuilder: (context, session) =>
+          DiscoveryPage(cubit: discoveryCubit),
+    );
+    final connection = ConnectionRobot(tester);
+    final discovery = DiscoveryRobot(tester);
+
+    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpAndSettle();
+    await connection.tapExplore();
+    discovery.expectQuickFiltersVisible();
+    await discovery.tapRecentThirtyDays();
+    discovery.expectFiltersActive();
+
+    await discovery.openFilters();
+    await discovery.tapResetFilters();
+    discovery.expectFiltersInactive();
+
+    await discoveryCubit.close();
+    router.dispose();
+  });
 }
 
 const _session = StoredSession(

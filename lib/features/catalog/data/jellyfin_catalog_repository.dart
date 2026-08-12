@@ -20,7 +20,8 @@ final class JellyfinCatalogRepository implements CatalogRepository {
     required this.userId,
     this.pageSize = 50,
     this.timeout = const Duration(seconds: 10),
-  }) {
+    DateTime Function()? now,
+  }) : _clock = now ?? _utcNow {
     if (pageSize < 1 || pageSize > 50) {
       throw ArgumentError.value(
         pageSize,
@@ -37,6 +38,7 @@ final class JellyfinCatalogRepository implements CatalogRepository {
   final String userId;
   final int pageSize;
   final Duration timeout;
+  final DateTime Function() _clock;
 
   @override
   Stream<CatalogPage> streamPages({
@@ -53,6 +55,7 @@ final class JellyfinCatalogRepository implements CatalogRepository {
       );
       return;
     }
+    final capturedUtcNow = (filter.dateWindowAnchor ?? _clock()).toUtc();
     var startIndex = 0;
     var previousStartIndex = -1;
     String? previousPageFingerprint;
@@ -140,7 +143,7 @@ final class JellyfinCatalogRepository implements CatalogRepository {
       final candidates = parsedItems
           .whereType<CatalogCandidate>()
           .where((candidate) => seenIds.add(candidate.id))
-          .where(filter.matches)
+          .where((candidate) => filter.matches(candidate, now: capturedUtcNow))
           .toList(growable: false);
       final hasMissingMetadata = candidates.any(
         (candidate) =>
@@ -225,17 +228,28 @@ final class JellyfinCatalogRepository implements CatalogRepository {
         'userId': userId,
         'includeItemTypes': mediaTypes,
         'recursive': 'true',
-        'fields': 'Overview,Genres,People,PrimaryImageAspectRatio',
+        'fields': 'Overview,Genres,People,PrimaryImageAspectRatio,DateCreated',
         'enableUserData': 'true',
         'enableImages': 'true',
         'enableImageTypes': 'Primary,Backdrop',
         'imageTypeLimit': '2',
         'enableTotalRecordCount': 'true',
         'filters': 'IsNotFolder',
+        if (filter.searchTerm.trim().isNotEmpty)
+          'searchTerm': filter.searchTerm.trim(),
+        if (filter.watched != null) 'isPlayed': '${filter.watched}',
+        if (filter.favorite != null) 'isFavorite': '${filter.favorite}',
         if (minimumCommunity != null) 'minCommunityRating': '$minimumCommunity',
         if (minimumCritic != null) 'minCriticRating': '$minimumCritic',
         if (genres.isNotEmpty) 'genres': genres.join('|'),
         if (years.isNotEmpty) 'years': years.join(','),
+        if (filter.officialRatings.isNotEmpty)
+          'officialRatings': (filter.officialRatings.toList()..sort()).join(
+            '|',
+          ),
+        if (filter.seriesStatuses.isNotEmpty)
+          'seriesStatus': _seriesStatuses(filter),
+        ..._sortParameters(filter.sort),
         'startIndex': '$startIndex',
         'limit': '$pageSize',
       },
@@ -340,6 +354,7 @@ final class JellyfinCatalogRepository implements CatalogRepository {
       criticRating: _number(item['CriticRating']),
       officialRating: _string(item['OfficialRating']),
       status: _string(item['Status']),
+      dateCreated: _dateTime(item['DateCreated']),
       overview: _string(item['Overview']),
       cast: item['People'] is List
           ? (item['People'] as List)
@@ -392,6 +407,9 @@ final class JellyfinCatalogRepository implements CatalogRepository {
 
   double? _number(Object? value) => value is num ? value.toDouble() : null;
 
+  DateTime? _dateTime(Object? value) =>
+      value is String ? DateTime.tryParse(value)?.toUtc() : null;
+
   String? _string(Object? value) => value is String ? value : null;
 
   bool? _bool(Object? value) => value is bool ? value : null;
@@ -420,8 +438,50 @@ final class JellyfinCatalogRepository implements CatalogRepository {
         (item['RunTimeTicks'] != null && item['RunTimeTicks'] is! int) ||
         (item['ProductionYear'] != null && item['ProductionYear'] is! int) ||
         (item['CommunityRating'] != null && item['CommunityRating'] is! num) ||
-        (item['CriticRating'] != null && item['CriticRating'] is! num);
+        (item['CriticRating'] != null && item['CriticRating'] is! num) ||
+        (item['DateCreated'] != null &&
+            (item['DateCreated'] is! String ||
+                _dateTime(item['DateCreated']) == null));
   }
+
+  String _seriesStatuses(CatalogFilter filter) {
+    final statuses = filter.seriesStatuses.toList()
+      ..sort((left, right) => left.name.compareTo(right.name));
+    return statuses
+        .map(
+          (status) => switch (status) {
+            CatalogSeriesStatus.continuing => 'Continuing',
+            CatalogSeriesStatus.ended => 'Ended',
+          },
+        )
+        .join(',');
+  }
+
+  Map<String, String> _sortParameters(CatalogSort sort) => switch (sort) {
+    CatalogSort.defaultOrder => const <String, String>{},
+    CatalogSort.recentlyAdded => const <String, String>{
+      'sortBy': 'DateCreated',
+      'sortOrder': 'Descending',
+    },
+    CatalogSort.title => const <String, String>{
+      'sortBy': 'SortName',
+      'sortOrder': 'Ascending',
+    },
+    CatalogSort.releaseYear => const <String, String>{
+      'sortBy': 'ProductionYear',
+      'sortOrder': 'Descending',
+    },
+    CatalogSort.communityRating => const <String, String>{
+      'sortBy': 'CommunityRating',
+      'sortOrder': 'Descending',
+    },
+    CatalogSort.runtime => const <String, String>{
+      'sortBy': 'Runtime',
+      'sortOrder': 'Ascending',
+    },
+  };
+
+  static DateTime _utcNow() => DateTime.now().toUtc();
 }
 
 final class _DecodedPage {

@@ -183,7 +183,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoveryFiltersLabel => 'Filters';
 
   @override
+  String get discoveryQuickRecentLabel => 'Added in last 30 days';
+
+  @override
+  String get discoveryQuickUnwatchedLabel => 'Unwatched';
+
+  @override
+  String get discoveryQuickFavoritesLabel => 'Favorites';
+
+  @override
+  String get discoveryActiveFilterLabel => 'Filters active';
+
+  @override
   String get discoveryFilterSheetTitle => 'Shape tonight\'s lineup';
+
+  @override
+  String get discoverySearchTitleLabel => 'Search titles';
+
+  @override
+  String get discoverySortLabel => 'Sort by';
+
+  @override
+  String get discoverySortDefaultLabel => 'Recommended';
+
+  @override
+  String get discoverySortRecentlyAddedLabel => 'Recently added';
+
+  @override
+  String get discoverySortTitleLabel => 'Title';
+
+  @override
+  String get discoverySortReleaseYearLabel => 'Release year';
+
+  @override
+  String get discoverySortCommunityRatingLabel => 'Community rating';
+
+  @override
+  String get discoverySortRuntimeLabel => 'Runtime';
+
+  @override
+  String get discoveryAddedWithinLabel => 'Added within';
+
+  @override
+  String get discoveryAddedWithinAnyLabel => 'Any time';
+
+  @override
+  String get discoveryAddedWithinWeekLabel => '7 days';
+
+  @override
+  String get discoveryAddedWithinMonthLabel => '30 days';
+
+  @override
+  String get discoveryAddedWithinQuarterLabel => '90 days';
+
+  @override
+  String get discoveryAddedWithinYearLabel => '365 days';
+
+  @override
+  String get discoveryResetFiltersLabel => 'Reset filters';
+
+  @override
+  String get discoveryOfficialRatingsFilterLabel => 'Content ratings';
+
+  @override
+  String get discoverySeriesStatusesFilterLabel => 'Series status';
+
+  @override
+  String get discoverySeriesContinuingLabel => 'Continuing';
+
+  @override
+  String get discoverySeriesEndedLabel => 'Ended';
 
   @override
   String get discoveryFineTuneFiltersLabel => 'Fine-tune your picks';

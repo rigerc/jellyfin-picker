@@ -57,21 +57,40 @@ final class _DiscoveryView extends StatelessWidget {
           child: Column(
             spacing: CandySpacing.cardGap,
             children: <Widget>[
-              BlocSelector<DiscoveryCubit, DiscoveryState, int>(
-                selector: (state) => state.filteredCandidates.length,
-                builder: (context, candidateCount) => DiscoveryHeader(
-                  candidateCount: candidateCount,
-                  onOpenFilters: () => showDiscoveryFilters(
-                    context,
-                    context.read<DiscoveryCubit>().state.filter,
+              Flexible(
+                fit: FlexFit.loose,
+                child: SingleChildScrollView(
+                  child: Column(
+                    spacing: CandySpacing.cardGap,
+                    children: <Widget>[
+                      BlocBuilder<DiscoveryCubit, DiscoveryState>(
+                        buildWhen: (previous, current) =>
+                            previous.filteredCandidates.length !=
+                                current.filteredCandidates.length ||
+                            previous.filter != current.filter,
+                        builder: (context, state) => DiscoveryHeader(
+                          candidateCount: state.filteredCandidates.length,
+                          filter: state.filter,
+                          onFilterChanged: (filter) => context
+                              .read<DiscoveryCubit>()
+                              .updateFilter(filter),
+                          onOpenFilters: () => showDiscoveryFilters(
+                            context,
+                            state.filter,
+                            candidates: state.candidates,
+                          ),
+                          onClear: () => _confirmClear(context),
+                        ),
+                      ),
+                      const DiscoveryModeSelector(),
+                    ],
                   ),
-                  onClear: () => _confirmClear(context),
                 ),
               ),
-              const DiscoveryModeSelector(),
               Expanded(
                 child: BlocBuilder<DiscoveryCubit, DiscoveryState>(
                   builder: (context, state) => AnimatedSwitcher(
+                    key: WidgetKeys.discoveryModeTransition,
                     duration: reduceMotion
                         ? Duration.zero
                         : CandyMotion.standard,

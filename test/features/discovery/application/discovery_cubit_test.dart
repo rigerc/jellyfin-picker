@@ -314,6 +314,57 @@ void main() {
     await cubit.close();
   });
 
+  test('should reset filters without clearing presets or decisions', () async {
+    final cubit = _cubit(FakeDiscoverySelector(null));
+    await cubit.replaceCandidates(<CatalogCandidate>[
+      _candidate('liked'),
+      _candidate('rejected'),
+    ]);
+    await cubit.like('liked');
+    await cubit.reject('rejected');
+    await cubit.updateFilter(const CatalogFilter(favorite: true));
+    await cubit.savePreset('Favorites');
+
+    await cubit.resetFilters();
+
+    expect(cubit.state.filter, const CatalogFilter());
+    expect(cubit.state.presets['Favorites']?.favorite, isTrue);
+    expect(cubit.state.likedIds, contains('liked'));
+    expect(cubit.state.rejectedIds, contains('rejected'));
+    await cubit.close();
+  });
+
+  test(
+    'should keep one recent-window anchor across state evaluations',
+    () async {
+      final anchor = DateTime.utc(2026, 8, 11, 12);
+      final cubit = DiscoveryCubit(
+        store: FakeDiscoveryStore(),
+        scopeKey: 'server/user',
+        selector: FakeDiscoverySelector(null),
+        now: () => anchor,
+      );
+      await cubit.updateFilter(
+        const CatalogFilter(addedWithin: CatalogAddedWindow.sevenDays),
+      );
+      await cubit.replaceCandidates(<CatalogCandidate>[
+        CatalogCandidate(
+          id: 'boundary',
+          name: 'Boundary',
+          mediaType: CatalogMediaType.movie,
+          dateCreated: anchor.subtract(const Duration(days: 7)),
+          poster: const CatalogImage.fallback(),
+          backdrop: const CatalogImage.fallback(),
+        ),
+      ]);
+
+      expect(cubit.state.filter.dateWindowAnchor, anchor);
+      expect(cubit.state.filteredCandidates.single.id, 'boundary');
+      expect(cubit.state.filteredCandidates.single.id, 'boundary');
+      await cubit.close();
+    },
+  );
+
   test('should validate preset names and bound preset count', () async {
     final cubit = _cubit(FakeDiscoverySelector(null));
     expect(() => cubit.savePreset('   '), throwsArgumentError);
@@ -327,6 +378,7 @@ void main() {
 
   test('should hydrate state across a new cubit instance', () async {
     final store = FakeDiscoveryStore();
+    final restoredAnchor = DateTime.utc(2026, 8, 11, 12);
     final first = DiscoveryCubit(
       store: store,
       scopeKey: 'server/user',
@@ -334,7 +386,16 @@ void main() {
     );
     await first.replaceCandidates(<CatalogCandidate>[_candidate('movie-1')]);
     await first.like('movie-1');
-    await first.updateFilter(const CatalogFilter(watched: true));
+    await first.updateFilter(
+      const CatalogFilter(
+        searchTerm: 'movie',
+        addedWithin: CatalogAddedWindow.ninetyDays,
+        sort: CatalogSort.recentlyAdded,
+        officialRatings: <String>{'PG-13'},
+        seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.ended},
+        watched: true,
+      ),
+    );
     await first.setMode(DiscoveryMode.swipe);
     await first.close();
 
@@ -342,11 +403,20 @@ void main() {
       store: store,
       scopeKey: 'server/user',
       selector: FakeDiscoverySelector(null),
+      now: () => restoredAnchor,
     );
     await second.hydrate();
 
     expect(second.state.isHydrated, isTrue);
     expect(second.state.filter.watched, isTrue);
+    expect(second.state.filter.searchTerm, 'movie');
+    expect(second.state.filter.addedWithin, CatalogAddedWindow.ninetyDays);
+    expect(second.state.filter.sort, CatalogSort.recentlyAdded);
+    expect(second.state.filter.officialRatings, <String>{'PG-13'});
+    expect(second.state.filter.seriesStatuses, <CatalogSeriesStatus>{
+      CatalogSeriesStatus.ended,
+    });
+    expect(second.state.filter.dateWindowAnchor, restoredAnchor);
     expect(second.state.likedIds, contains('movie-1'));
     expect(second.state.mode, DiscoveryMode.swipe);
     await second.close();

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:jellyfin_picker/core/keys/widget_keys.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
+import 'package:jellyfin_picker/core/media/entities/catalog_filter.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
 import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_snapshot.dart';
@@ -86,6 +88,100 @@ void main() {
     expect(cubit.state.filter.mediaTypes, <CatalogMediaType>{
       CatalogMediaType.movie,
     });
+    await cubit.close();
+  });
+
+  testWidgets('should expose quick filters and active filter state', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+    robot.expectQuickFiltersVisible();
+    robot.expectFiltersInactive();
+    expect(
+      tester.getSemantics(find.byKey(WidgetKeys.discoveryRecentFilter)).label,
+      contains('Added in last 30 days'),
+    );
+    expect(
+      tester
+          .getSemantics(find.byKey(WidgetKeys.discoveryUnwatchedFilter))
+          .label,
+      contains('Unwatched'),
+    );
+    expect(
+      tester
+          .getSemantics(find.byKey(WidgetKeys.discoveryFavoritesFilter))
+          .label,
+      contains('Favorites'),
+    );
+    await robot.tapRecentThirtyDays();
+
+    expect(cubit.state.filter.isActive, isTrue);
+    await tester.tap(find.byKey(WidgetKeys.discoveryUnwatchedFilter));
+    await tester.pump();
+    await tester.tap(find.byKey(WidgetKeys.discoveryFavoritesFilter));
+    await tester.pump();
+    expect(cubit.state.filter.watched, isFalse);
+    expect(cubit.state.filter.favorite, isTrue);
+    robot.expectFiltersActive();
+    semantics.dispose();
+    await cubit.close();
+  });
+
+  testWidgets('should combine search, recent, and metadata filters', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+    await robot.applyAdvancedFilters();
+
+    expect(cubit.state.filter.searchTerm, 'Candy');
+    expect(cubit.state.filter.sort, CatalogSort.recentlyAdded);
+    expect(cubit.state.filter.addedWithin, CatalogAddedWindow.thirtyDays);
+    expect(cubit.state.filter.genres, <String>{'mystery'});
+    expect(cubit.state.filter.decades, <int>{2020});
+    expect(cubit.state.filter.officialRatings, <String>{'PG-13'});
+    expect(cubit.state.filter.seriesStatuses, <CatalogSeriesStatus>{
+      CatalogSeriesStatus.continuing,
+    });
+    await cubit.close();
+  });
+
+  testWidgets('should preserve restored maximum ratings when reapplied', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.updateFilter(
+      const CatalogFilter(maximumCommunityRating: 9, maximumCriticRating: 95),
+    );
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+
+    await _pumpPage(tester, cubit);
+    await tester.tap(find.byKey(WidgetKeys.discoveryFilterButton));
+    await tester.pumpAndSettle();
+    final apply = find.byKey(WidgetKeys.discoveryApplyFilters);
+    await tester.scrollUntilVisible(
+      apply,
+      CandySpacing.section,
+      scrollable: find
+          .descendant(
+            of: find.byKey(WidgetKeys.discoveryFilterSheet),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await tester.tap(apply);
+    await tester.pumpAndSettle();
+
+    expect(cubit.state.filter.maximumCommunityRating, 9);
+    expect(cubit.state.filter.maximumCriticRating, 95);
     await cubit.close();
   });
 

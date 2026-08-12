@@ -23,12 +23,57 @@ void main() {
       decades: <int>{1980, 2020},
       watched: true,
       favorite: false,
+      searchTerm: ' candy ',
+      addedWithin: CatalogAddedWindow.ninetyDays,
+      sort: CatalogSort.recentlyAdded,
+      officialRatings: <String>{'PG-13', 'TV-14'},
+      seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.ended},
     );
 
     final encoded = CatalogFilterCodec.encode(filter);
     final decoded = CatalogFilterCodec.decode(encoded);
 
     expect(CatalogFilterCodec.encode(decoded!), encoded);
+  });
+
+  test('should restore old filter snapshots with new defaults', () {
+    final decoded = CatalogFilterCodec.decode(<String, Object?>{
+      'mediaTypes': <String>[],
+      'minimumRuntimeMinutes': null,
+      'maximumRuntimeMinutes': null,
+      'minimumCommunityRating': null,
+      'maximumCommunityRating': null,
+      'minimumCriticRating': null,
+      'maximumCriticRating': null,
+      'genres': <String>[],
+      'decades': <int>[],
+      'watched': null,
+      'favorite': null,
+    });
+
+    expect(decoded?.searchTerm, isEmpty);
+    expect(decoded?.addedWithin, isNull);
+    expect(decoded?.sort, CatalogSort.defaultOrder);
+    expect(decoded?.officialRatings, isEmpty);
+    expect(decoded?.seriesStatuses, isEmpty);
+  });
+
+  test('should accept critic ratings up to one hundred', () {
+    final decoded = CatalogFilterCodec.decode(<String, Object?>{
+      'mediaTypes': <String>[],
+      'minimumRuntimeMinutes': null,
+      'maximumRuntimeMinutes': null,
+      'minimumCommunityRating': null,
+      'maximumCommunityRating': null,
+      'minimumCriticRating': 100,
+      'maximumCriticRating': 100,
+      'genres': <String>[],
+      'decades': <int>[],
+      'watched': null,
+      'favorite': null,
+    });
+
+    expect(decoded?.maximumCriticRating, 100);
   });
 
   test('should reject malformed filter data without throwing', () {

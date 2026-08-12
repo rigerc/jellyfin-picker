@@ -11,11 +11,14 @@ final class DiscoveryCubit extends Cubit<DiscoveryState> {
     required this.store,
     required this.scopeKey,
     required this.selector,
-  }) : super(DiscoveryState());
+    DateTime Function()? now,
+  }) : _clock = now ?? _utcNow,
+       super(DiscoveryState());
 
   final DiscoveryStore store;
   final String scopeKey;
   final DiscoverySelector selector;
+  final DateTime Function() _clock;
   int _generation = 0;
   Future<void> _writeQueue = Future<void>.value();
 
@@ -39,7 +42,7 @@ final class DiscoveryCubit extends Cubit<DiscoveryState> {
     }
     emit(
       state.copyWith(
-        filter: restored.filter,
+        filter: _withFreshDateWindowAnchor(restored.filter),
         presets: restored.presets,
         likedIds: restored.likedIds,
         rejectedIds: restored.rejectedIds,
@@ -78,7 +81,9 @@ final class DiscoveryCubit extends Cubit<DiscoveryState> {
   }
 
   Future<void> updateFilter(CatalogFilter filter) =>
-      _commit(_withFilter(filter));
+      _commit(_withFilter(_withFreshDateWindowAnchor(filter)));
+
+  Future<void> resetFilters() => updateFilter(const CatalogFilter());
 
   Future<void> setMode(DiscoveryMode mode) =>
       _commit(state.copyWith(mode: mode));
@@ -286,4 +291,15 @@ final class DiscoveryCubit extends Cubit<DiscoveryState> {
         currentRevealId: value.currentRevealId,
         currentPickId: value.currentPickId,
       );
+
+  CatalogFilter _withFreshDateWindowAnchor(CatalogFilter filter) {
+    if (filter.addedWithin == null && filter.dateWindowAnchor == null) {
+      return filter;
+    }
+    return filter.copyWith(
+      dateWindowAnchor: filter.addedWithin == null ? null : _clock().toUtc(),
+    );
+  }
+
+  static DateTime _utcNow() => DateTime.now().toUtc();
 }

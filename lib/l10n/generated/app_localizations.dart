@@ -388,11 +388,149 @@ abstract class AppLocalizations {
   /// **'Filters'**
   String get discoveryFiltersLabel;
 
+  /// No description provided for @discoveryQuickRecentLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Added in last 30 days'**
+  String get discoveryQuickRecentLabel;
+
+  /// No description provided for @discoveryQuickUnwatchedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unwatched'**
+  String get discoveryQuickUnwatchedLabel;
+
+  /// No description provided for @discoveryQuickFavoritesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get discoveryQuickFavoritesLabel;
+
+  /// No description provided for @discoveryActiveFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters active'**
+  String get discoveryActiveFilterLabel;
+
   /// No description provided for @discoveryFilterSheetTitle.
   ///
   /// In en, this message translates to:
   /// **'Shape tonight\'s lineup'**
   String get discoveryFilterSheetTitle;
+
+  /// No description provided for @discoverySearchTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search titles'**
+  String get discoverySearchTitleLabel;
+
+  /// No description provided for @discoverySortLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort by'**
+  String get discoverySortLabel;
+
+  /// No description provided for @discoverySortDefaultLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get discoverySortDefaultLabel;
+
+  /// No description provided for @discoverySortRecentlyAddedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Recently added'**
+  String get discoverySortRecentlyAddedLabel;
+
+  /// No description provided for @discoverySortTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get discoverySortTitleLabel;
+
+  /// No description provided for @discoverySortReleaseYearLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Release year'**
+  String get discoverySortReleaseYearLabel;
+
+  /// No description provided for @discoverySortCommunityRatingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Community rating'**
+  String get discoverySortCommunityRatingLabel;
+
+  /// No description provided for @discoverySortRuntimeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Runtime'**
+  String get discoverySortRuntimeLabel;
+
+  /// No description provided for @discoveryAddedWithinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Added within'**
+  String get discoveryAddedWithinLabel;
+
+  /// No description provided for @discoveryAddedWithinAnyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Any time'**
+  String get discoveryAddedWithinAnyLabel;
+
+  /// No description provided for @discoveryAddedWithinWeekLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get discoveryAddedWithinWeekLabel;
+
+  /// No description provided for @discoveryAddedWithinMonthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
+  String get discoveryAddedWithinMonthLabel;
+
+  /// No description provided for @discoveryAddedWithinQuarterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'90 days'**
+  String get discoveryAddedWithinQuarterLabel;
+
+  /// No description provided for @discoveryAddedWithinYearLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'365 days'**
+  String get discoveryAddedWithinYearLabel;
+
+  /// No description provided for @discoveryResetFiltersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset filters'**
+  String get discoveryResetFiltersLabel;
+
+  /// No description provided for @discoveryOfficialRatingsFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Content ratings'**
+  String get discoveryOfficialRatingsFilterLabel;
+
+  /// No description provided for @discoverySeriesStatusesFilterLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Series status'**
+  String get discoverySeriesStatusesFilterLabel;
+
+  /// No description provided for @discoverySeriesContinuingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continuing'**
+  String get discoverySeriesContinuingLabel;
+
+  /// No description provided for @discoverySeriesEndedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get discoverySeriesEndedLabel;
 
   /// No description provided for @discoveryFineTuneFiltersLabel.
   ///
