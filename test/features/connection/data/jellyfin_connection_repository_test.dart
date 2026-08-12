@@ -217,7 +217,7 @@ void main() {
   });
 
   test(
-    'should clear local state after unauthorized restore and attempt remote logout',
+    'should surface expired restore without deleting or remotely logging out',
     () async {
       final store = FakeSessionStore(
         session: const StoredSession(
@@ -247,12 +247,13 @@ void main() {
         (result as SessionRestoreFailure).failure,
         isA<ExpiredSessionFailure>(),
       );
-      expect(store.session, isNull);
+      expect(store.session?.accessToken, 'expired-token');
+      expect(client.requests, hasLength(1));
       expect(
         client.requests.any(
           (request) => request.url.path.endsWith('/Sessions/Logout'),
         ),
-        isTrue,
+        isFalse,
       );
     },
   );
@@ -333,7 +334,7 @@ void main() {
   );
 
   test(
-    'should return storage failure when expired-session clearing fails',
+    'should not clear a rejected session even when clearing would fail',
     () async {
       final repository = JellyfinConnectionRepository(
         client: RecordingHttpClient((request) async {
@@ -349,7 +350,10 @@ void main() {
       final result = await repository.restoreSession();
 
       expect(result, isA<SessionRestoreFailure>());
-      expect((result as SessionRestoreFailure).failure, isA<StorageFailure>());
+      expect(
+        (result as SessionRestoreFailure).failure,
+        isA<ExpiredSessionFailure>(),
+      );
     },
   );
 
@@ -382,9 +386,10 @@ void main() {
   test(
     'should classify transient restore errors as a server failure',
     () async {
+      final store = FakeSessionStore(session: _storedSession());
       final repository = JellyfinConnectionRepository(
         client: RecordingHttpClient((request) async => http.Response('', 503)),
-        sessionStore: FakeSessionStore(session: _storedSession()),
+        sessionStore: store,
         deviceIdProvider: const FakeDeviceIdProvider('device-id'),
       );
 
@@ -392,6 +397,7 @@ void main() {
 
       expect(result, isA<SessionRestoreFailure>());
       expect((result as SessionRestoreFailure).failure, isA<ServerFailure>());
+      expect(store.session, isNotNull);
     },
   );
 
