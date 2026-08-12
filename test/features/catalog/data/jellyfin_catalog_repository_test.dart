@@ -71,7 +71,7 @@ void main() {
       expect(request.url.queryParameters['filters'], 'IsNotFolder');
       expect(
         request.url.queryParameters['fields'],
-        'Overview,Genres,People,PrimaryImageAspectRatio',
+        'Overview,Genres,People,PrimaryImageAspectRatio,DateCreated',
       );
       expect(request.followRedirects, isFalse);
       expect(
@@ -680,6 +680,218 @@ void main() {
 
       expect(page.candidates, hasLength(1));
       expect(page.failure, isA<PartialCatalogFailure>());
+    },
+  );
+
+  test('should map date created and user filter metadata', () async {
+    final client = RecordingHttpClient(
+      (request) async => _jsonResponse({
+        'Items': <Map<String, Object?>>[
+          <String, Object?>{
+            ..._movieJson(),
+            'DateCreated': '2026-08-01T10:20:30Z',
+            'UserData': <String, Object?>{'Played': false, 'IsFavorite': true},
+          },
+        ],
+        'TotalRecordCount': 1,
+      }),
+    );
+    final repository = JellyfinCatalogRepository(
+      client: client,
+      serverUrl: 'https://example.test',
+      accessToken: 'token',
+      deviceId: 'device',
+      userId: 'user-id',
+    );
+
+    final candidate = (await repository.streamPages().first).candidates.single;
+
+    expect(candidate.dateCreated, DateTime.parse('2026-08-01T10:20:30Z'));
+    expect(candidate.watched, isFalse);
+    expect(candidate.favorite, isTrue);
+  });
+
+  test('should treat malformed date created metadata as partial', () async {
+    final repository = JellyfinCatalogRepository(
+      client: RecordingHttpClient(
+        (request) async => _jsonResponse({
+          'Items': <Map<String, Object?>>[
+            <String, Object?>{..._movieJson(), 'DateCreated': 'not-a-date'},
+          ],
+          'TotalRecordCount': 1,
+        }),
+      ),
+      serverUrl: 'https://example.test',
+      accessToken: 'token',
+      deviceId: 'device',
+      userId: 'user-id',
+    );
+
+    final page = await repository.streamPages().first;
+
+    expect(page.candidates.single.dateCreated, isNull);
+    expect(page.failure, isA<PartialCatalogFailure>());
+  });
+
+  test(
+    'should push search and supported filters to the server query',
+    () async {
+      final client = RecordingHttpClient(
+        (request) async => _jsonResponse({
+          'Items': <Map<String, Object?>>[_movieJson()],
+          'TotalRecordCount': 1,
+        }),
+      );
+      final repository = JellyfinCatalogRepository(
+        client: client,
+        serverUrl: 'https://example.test',
+        accessToken: 'token',
+        deviceId: 'device',
+        userId: 'user-id',
+      );
+
+      await repository
+          .streamPages(
+            filter: const CatalogFilter(
+              searchTerm: 'candy',
+              watched: true,
+              favorite: true,
+              officialRatings: <String>{'R', 'PG-13'},
+              seriesStatuses: <CatalogSeriesStatus>{
+                CatalogSeriesStatus.continuing,
+                CatalogSeriesStatus.ended,
+              },
+            ),
+          )
+          .first;
+
+      final query = client.requests.single.url.queryParameters;
+      expect(query['searchTerm'], 'candy');
+      expect(query['isPlayed'], 'true');
+      expect(query['isFavorite'], 'true');
+      expect(query['officialRatings'], 'PG-13|R');
+      expect(query['seriesStatus'], 'Continuing,Ended');
+      expect(query['filters'], 'IsNotFolder');
+    },
+  );
+
+  test(
+    'should map sort and added window constraints to the server query',
+    () async {
+      final client = RecordingHttpClient(
+        (request) async => _jsonResponse({
+          'Items': <Map<String, Object?>>[_movieJson()],
+          'TotalRecordCount': 1,
+        }),
+      );
+      final repository = JellyfinCatalogRepository(
+        client: client,
+        serverUrl: 'https://example.test',
+        accessToken: 'token',
+        deviceId: 'device',
+        userId: 'user-id',
+        now: () => DateTime.utc(2026, 8, 11, 12),
+      );
+
+      await repository
+          .streamPages(
+            filter: const CatalogFilter(
+              addedWithin: CatalogAddedWindow.sevenDays,
+              sort: CatalogSort.recentlyAdded,
+            ),
+          )
+          .first;
+
+      final query = client.requests.single.url.queryParameters;
+      expect(query['sortBy'], 'DateCreated');
+      expect(query['sortOrder'], 'Descending');
+      expect(query.containsKey('minDateCreated'), isFalse);
+    },
+  );
+
+  test(
+    'should map every supported sort to its Jellyfin query values',
+    () async {
+      for (final entry in <CatalogSort, List<String?>>{
+        CatalogSort.defaultOrder: <String?>[null, null],
+        CatalogSort.recentlyAdded: <String?>['DateCreated', 'Descending'],
+        CatalogSort.title: <String?>['SortName', 'Ascending'],
+        CatalogSort.releaseYear: <String?>['ProductionYear', 'Descending'],
+        CatalogSort.communityRating: <String?>['CommunityRating', 'Descending'],
+        CatalogSort.runtime: <String?>['Runtime', 'Ascending'],
+      }.entries) {
+        final client = RecordingHttpClient(
+          (request) async => _jsonResponse({
+            'Items': <Map<String, Object?>>[_movieJson()],
+            'TotalRecordCount': 1,
+          }),
+        );
+        final repository = JellyfinCatalogRepository(
+          client: client,
+          serverUrl: 'https://example.test',
+          accessToken: 'token',
+          deviceId: 'device',
+          userId: 'user-id',
+        );
+
+        await repository
+            .streamPages(filter: CatalogFilter(sort: entry.key))
+            .first;
+
+        final query = client.requests.single.url.queryParameters;
+        expect(query['sortBy'], entry.value[0]);
+        expect(query['sortOrder'], entry.value[1]);
+      }
+    },
+  );
+
+  test(
+    'should capture the clock once while refining an added window across pages',
+    () async {
+      var clockCalls = 0;
+      var requestCount = 0;
+      final client = RecordingHttpClient((request) async {
+        requestCount++;
+        final startIndex = int.parse(
+          request.url.queryParameters['startIndex']!,
+        );
+        return _jsonResponse({
+          'Items': <Map<String, Object?>>[
+            <String, Object?>{
+              ..._movieJson(),
+              'Id': 'movie-$requestCount',
+              'DateCreated': startIndex == 0
+                  ? '2026-08-04T11:59:59Z'
+                  : '2026-08-04T12:00:00Z',
+            },
+          ],
+          'StartIndex': startIndex,
+          'TotalRecordCount': 2,
+        });
+      });
+      final repository = JellyfinCatalogRepository(
+        client: client,
+        serverUrl: 'https://example.test',
+        accessToken: 'token',
+        deviceId: 'device',
+        userId: 'user-id',
+        now: () {
+          clockCalls++;
+          return DateTime.utc(2026, 8, 11, 12);
+        },
+      );
+
+      final pages = await repository
+          .streamPages(
+            filter: const CatalogFilter(
+              addedWithin: CatalogAddedWindow.sevenDays,
+            ),
+          )
+          .toList();
+      final candidates = pages.expand((page) => page.candidates).toList();
+
+      expect(candidates.map((candidate) => candidate.id), <String>['movie-2']);
+      expect(clockCalls, 1);
     },
   );
 }

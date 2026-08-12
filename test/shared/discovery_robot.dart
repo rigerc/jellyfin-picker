@@ -19,6 +19,84 @@ final class DiscoveryRobot {
     expect(find.byKey(WidgetKeys.discoveryGrid), findsOneWidget);
   }
 
+  void expectQuickFiltersVisible() {
+    expect(find.byKey(WidgetKeys.discoveryRecentFilter), findsOneWidget);
+    expect(find.byKey(WidgetKeys.discoveryUnwatchedFilter), findsOneWidget);
+    expect(find.byKey(WidgetKeys.discoveryFavoritesFilter), findsOneWidget);
+  }
+
+  void expectFiltersInactive() {
+    expect(find.byKey(WidgetKeys.discoveryActiveFilterIndicator), findsNothing);
+  }
+
+  void expectFiltersActive() {
+    expect(
+      find.byKey(WidgetKeys.discoveryActiveFilterIndicator),
+      findsOneWidget,
+    );
+  }
+
+  Future<void> tapRecentThirtyDays() async {
+    await tester.tap(find.byKey(WidgetKeys.discoveryRecentFilter));
+    await tester.pump();
+  }
+
+  Future<void> openFilters() async {
+    await tester.tap(find.byKey(WidgetKeys.discoveryFilterButton));
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.byKey(WidgetKeys.discoveryFavoriteField),
+      CandySpacing.section,
+      scrollable: _filterScrollable,
+    );
+  }
+
+  Future<void> tapResetFilters() async {
+    await tester.tap(find.byKey(WidgetKeys.discoveryResetFilters));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> applyAdvancedFilters() async {
+    await tester.tap(find.byKey(WidgetKeys.discoveryFilterButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(WidgetKeys.discoverySearchField),
+      'Candy',
+    );
+    await _selectDropdownValue(WidgetKeys.discoverySortField, 'Recently added');
+    await _selectDropdownValue(WidgetKeys.discoveryAddedWithinField, '30 days');
+    for (final key in <Key>[
+      WidgetKeys.discoveryGenre('mystery'),
+      WidgetKeys.discoveryDecade(2020),
+      WidgetKeys.discoveryOfficialRating('PG-13'),
+      WidgetKeys.discoverySeriesStatus('continuing'),
+    ]) {
+      await tester.scrollUntilVisible(
+        find.byKey(key),
+        CandySpacing.section,
+        scrollable: _filterScrollable,
+      );
+      await tester.tap(find.byKey(key));
+      await tester.pump();
+    }
+    await tester.scrollUntilVisible(
+      find.byKey(WidgetKeys.discoveryApplyFilters),
+      CandySpacing.section,
+      scrollable: _filterScrollable,
+    );
+    await tester.tap(find.byKey(WidgetKeys.discoveryApplyFilters));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> _selectDropdownValue(Key key, String label) async {
+    final field = find.byKey(key);
+    await tester.ensureVisible(field);
+    await tester.tap(field);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(label).last);
+    await tester.pumpAndSettle();
+  }
+
   void expectSwipeVisible() {
     expect(find.byKey(WidgetKeys.discoverySwipeDeck), findsOneWidget);
   }
@@ -48,7 +126,9 @@ final class DiscoveryRobot {
   }
 
   Future<void> toggleFirstFavorite() async {
-    await tester.tap(find.byKey(WidgetKeys.discoveryFavorite('movie-1')));
+    final favorite = find.byKey(WidgetKeys.discoveryFavorite('movie-1'));
+    await tester.ensureVisible(favorite);
+    await tester.tap(favorite);
     await tester.pump();
   }
 
@@ -100,7 +180,7 @@ final class DiscoveryRobot {
     await tester.tap(find.byKey(WidgetKeys.discoveryFilterButton));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
-      find.text('Favorite state'),
+      find.byKey(WidgetKeys.discoveryFavoriteField),
       CandySpacing.section,
       scrollable: _filterScrollable,
     );
@@ -128,12 +208,7 @@ final class DiscoveryRobot {
 
   void expectModeTransitionDuration(Duration duration) {
     final switcher = tester.widget<AnimatedSwitcher>(
-      find
-          .descendant(
-            of: find.byKey(WidgetKeys.discoveryPage),
-            matching: find.byType(AnimatedSwitcher),
-          )
-          .first,
+      find.byKey(WidgetKeys.discoveryModeTransition),
     );
     expect(switcher.duration, duration);
   }
@@ -177,8 +252,8 @@ final class DiscoveryRobot {
   }
 
   void expectFilterSelectSpacing(double minimumGap) {
-    final watched = _inputDecoratorFor('Watched state');
-    final favorite = _inputDecoratorFor('Favorite state');
+    final watched = find.byKey(WidgetKeys.discoveryWatchedField);
+    final favorite = find.byKey(WidgetKeys.discoveryFavoriteField);
     final gap =
         tester.getTopLeft(favorite).dy - tester.getBottomLeft(watched).dy;
 
@@ -244,16 +319,7 @@ final class DiscoveryRobot {
     expect(images.map((image) => image.fit), everyElement(fit));
   }
 
-  Finder get _filterScrollable => find
-      .descendant(
-        of: find.byKey(WidgetKeys.discoveryFilterSheet),
-        matching: find.byType(Scrollable),
-      )
-      .first;
-
-  Finder _inputDecoratorFor(String label) => find
-      .ancestor(of: find.text(label), matching: find.byType(InputDecorator))
-      .first;
+  Finder get _filterScrollable => find.byType(Scrollable).last;
 
   NetworkImage _networkImageFor(ImageProvider provider) => switch (provider) {
     ResizeImage(:final imageProvider) => imageProvider as NetworkImage,

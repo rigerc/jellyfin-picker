@@ -87,4 +87,20 @@ void main() {
       ),
     );
   });
+
+  test('should preserve the creation date when copying a candidate', () {
+    final dateCreated = DateTime.utc(2025, 1, 2, 3, 4);
+    final candidate = CatalogCandidate(
+      id: 'movie-1',
+      name: 'Movie',
+      mediaType: CatalogMediaType.movie,
+      dateCreated: dateCreated,
+      poster: const CatalogImage.fallback(),
+      backdrop: const CatalogImage.fallback(),
+    );
+
+    final updated = candidate.copyWith(favorite: true);
+
+    expect(updated.dateCreated, dateCreated);
+  });
 }

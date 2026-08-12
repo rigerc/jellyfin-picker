@@ -251,4 +251,182 @@ void main() {
       expect(filters.every((filter) => !filter.matches(candidate)), isTrue);
     },
   );
+
+  test(
+    'should report search, date window, and metadata dimensions as active',
+    () {
+      expect(
+        const CatalogFilter(
+          searchTerm: 'movie',
+          addedWithin: CatalogAddedWindow.sevenDays,
+          officialRatings: <String>{'PG'},
+          seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.continuing},
+        ).isActive,
+        isTrue,
+      );
+      expect(const CatalogFilter(sort: CatalogSort.title).isActive, isFalse);
+    },
+  );
+
+  test('should match a normalized title and inclusive added date cutoff', () {
+    final now = DateTime.utc(2025, 2, 8, 12);
+    final candidate = CatalogCandidate(
+      id: 'movie',
+      name: '  The   Candy Movie  ',
+      mediaType: CatalogMediaType.movie,
+      dateCreated: DateTime.utc(2025, 2, 1, 12),
+      poster: CatalogImage.fallback(),
+      backdrop: CatalogImage.fallback(),
+    );
+
+    expect(
+      const CatalogFilter(
+        searchTerm: 'candy movie',
+        addedWithin: CatalogAddedWindow.sevenDays,
+      ).matches(candidate, now: now),
+      isTrue,
+    );
+  });
+
+  test('should reuse its date-window anchor across repeated evaluations', () {
+    final anchor = DateTime.utc(2025, 2, 8, 12);
+    final candidate = CatalogCandidate(
+      id: 'movie',
+      name: 'Movie',
+      mediaType: CatalogMediaType.movie,
+      dateCreated: anchor.subtract(const Duration(days: 7)),
+      poster: CatalogImage.fallback(),
+      backdrop: CatalogImage.fallback(),
+    );
+    final filter = CatalogFilter(
+      addedWithin: CatalogAddedWindow.sevenDays,
+      dateWindowAnchor: anchor,
+    );
+
+    expect(filter.matches(candidate), isTrue);
+    expect(filter.matches(candidate), isTrue);
+  });
+
+  test('should enforce every recent window at its inclusive UTC boundary', () {
+    final anchor = DateTime.parse('2025-02-08T13:00:00+01:00');
+    for (final window in CatalogAddedWindow.values) {
+      final cutoff = anchor.toUtc().subtract(Duration(days: window.days));
+      final candidate = CatalogCandidate(
+        id: window.name,
+        name: 'Movie',
+        mediaType: CatalogMediaType.movie,
+        dateCreated: cutoff,
+        poster: CatalogImage.fallback(),
+        backdrop: CatalogImage.fallback(),
+      );
+      final filter = CatalogFilter(
+        addedWithin: window,
+        dateWindowAnchor: anchor,
+      );
+
+      expect(filter.matches(candidate), isTrue, reason: window.name);
+      expect(
+        filter.matches(
+          CatalogCandidate(
+            id: '${window.name}-old',
+            name: 'Old movie',
+            mediaType: CatalogMediaType.movie,
+            dateCreated: cutoff.subtract(const Duration(microseconds: 1)),
+            poster: CatalogImage.fallback(),
+            backdrop: CatalogImage.fallback(),
+          ),
+        ),
+        isFalse,
+        reason: window.name,
+      );
+    }
+  });
+
+  test('should reject a title outside an active date window or search', () {
+    final now = DateTime.utc(2025, 2, 8, 12);
+    final candidate = CatalogCandidate(
+      id: 'movie',
+      name: 'Other Movie',
+      mediaType: CatalogMediaType.movie,
+      dateCreated: DateTime.utc(2025, 1, 31),
+      poster: CatalogImage.fallback(),
+      backdrop: CatalogImage.fallback(),
+    );
+
+    expect(
+      const CatalogFilter(
+        searchTerm: 'candy',
+        addedWithin: CatalogAddedWindow.sevenDays,
+      ).matches(candidate, now: now),
+      isFalse,
+    );
+  });
+
+  test('should match official ratings without case sensitivity', () {
+    const candidate = CatalogCandidate(
+      id: 'movie',
+      name: 'Movie',
+      mediaType: CatalogMediaType.movie,
+      officialRating: 'pg-13',
+      poster: CatalogImage.fallback(),
+      backdrop: CatalogImage.fallback(),
+    );
+
+    expect(
+      const CatalogFilter(
+        officialRatings: <String>{'PG-13'},
+      ).matches(candidate),
+      isTrue,
+    );
+  });
+
+  test('should match series status aliases', () {
+    const continuing = CatalogCandidate(
+      id: 'continuing',
+      name: 'Continuing',
+      mediaType: CatalogMediaType.series,
+      status: 'Returning Series',
+      poster: CatalogImage.fallback(),
+      backdrop: CatalogImage.fallback(),
+    );
+    const ended = CatalogCandidate(
+      id: 'ended',
+      name: 'Ended',
+      mediaType: CatalogMediaType.series,
+      status: 'Cancelled',
+      poster: CatalogImage.fallback(),
+      backdrop: CatalogImage.fallback(),
+    );
+
+    expect(
+      const CatalogFilter(
+        seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.continuing},
+      ).matches(continuing),
+      isTrue,
+    );
+    expect(
+      const CatalogFilter(
+        seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.ended},
+      ).matches(ended),
+      isTrue,
+    );
+  });
+
+  test('should clear nullable constraints when copying a filter', () {
+    const filter = CatalogFilter(
+      addedWithin: CatalogAddedWindow.thirtyDays,
+      minimumRuntimeMinutes: 10,
+      watched: true,
+    );
+
+    final cleared = filter.copyWith(
+      addedWithin: null,
+      minimumRuntimeMinutes: null,
+      watched: null,
+    );
+
+    expect(cleared.addedWithin, isNull);
+    expect(cleared.minimumRuntimeMinutes, isNull);
+    expect(cleared.watched, isNull);
+  });
 }
