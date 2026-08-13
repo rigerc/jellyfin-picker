@@ -4,20 +4,245 @@ import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 
 void main() {
   test(
-    'should expose the semantic candy palette when colors are requested',
+    'should expose violet and blue brand colors when palette is requested',
     () {
-      expect(CandyColors.canvas, const Color(0xFFFFF7ED));
-      expect(CandyColors.paper, const Color(0xFFFFFFFF));
-      expect(CandyColors.coral, const Color(0xFFFF6B6B));
-      expect(CandyColors.orange, const Color(0xFFFF9F43));
-      expect(CandyColors.aqua, const Color(0xFF4ECDC4));
-      expect(CandyColors.lemon, const Color(0xFFFFD166));
-      expect(CandyColors.ink, const Color(0xFF2D3047));
-      expect(CandyColors.mint, const Color(0xFF6BCB77));
-      expect(CandyColors.berry, const Color(0xFFD1495B));
-      expect(CandyColors.amber, const Color(0xFFF4A261));
+      final brandColors = (
+        primary: CandyColors.primary,
+        secondary: CandyColors.secondaryBrand,
+      );
+
+      expect(brandColors, (
+        primary: const Color(0xFF8B5CF6),
+        secondary: const Color(0xFF4257CE),
+      ));
     },
   );
+
+  test('should use violet and blue brand colors in both brightness modes', () {
+    final themes = [buildCandyLightTheme(), buildCandyDarkTheme()];
+
+    final brandRoles = [
+      for (final theme in themes)
+        (
+          brightness: theme.brightness,
+          primary: theme.colorScheme.primary,
+          secondary: theme.colorScheme.secondary,
+        ),
+    ];
+
+    expect(brandRoles, [
+      (
+        brightness: Brightness.light,
+        primary: CandyColors.primary,
+        secondary: CandyColors.secondaryBrand,
+      ),
+      (
+        brightness: Brightness.dark,
+        primary: CandyColors.primary,
+        secondary: CandyColors.secondaryBrand,
+      ),
+    ]);
+  });
+
+  test(
+    'should expose the semantic signature palette when colors are requested',
+    () {
+      final palette = (
+        primary: CandyColors.primary,
+        secondaryBrand: CandyColors.secondaryBrand,
+        accent: CandyColors.accent,
+        softAccent: CandyColors.softAccent,
+        warmAccent: CandyColors.warmAccent,
+        surface: CandyColors.surface,
+        background: CandyColors.background,
+        onDark: CandyColors.onDark,
+        contrastInk: CandyColors.contrastInk,
+      );
+
+      expect(palette, (
+        primary: const Color(0xFF8B5CF6),
+        secondaryBrand: const Color(0xFF4257CE),
+        accent: const Color(0xFF7FE6D2),
+        softAccent: const Color(0xFFC9AEEE),
+        warmAccent: const Color(0xFFF2A6C2),
+        surface: const Color(0xFF211A48),
+        background: const Color(0xFF141033),
+        onDark: const Color(0xFFF0EAFB),
+        contrastInk: const Color(0xFF000000),
+      ));
+    },
+  );
+
+  test('should map semantic palette roles in both brightness modes', () {
+    final themes = [buildCandyLightTheme(), buildCandyDarkTheme()];
+
+    final semanticRoles = [
+      for (final theme in themes)
+        (
+          onPrimary: theme.colorScheme.onPrimary,
+          onSecondary: theme.colorScheme.onSecondary,
+          tertiary: theme.colorScheme.tertiary,
+          onTertiary: theme.colorScheme.onTertiary,
+          tertiaryContainer: theme.colorScheme.tertiaryContainer,
+          onTertiaryContainer: theme.colorScheme.onTertiaryContainer,
+          error: theme.colorScheme.error,
+          onError: theme.colorScheme.onError,
+          errorContainer: theme.colorScheme.errorContainer,
+          onErrorContainer: theme.colorScheme.onErrorContainer,
+          secondaryContainer: theme.colorScheme.secondaryContainer,
+          onSecondaryContainer: theme.colorScheme.onSecondaryContainer,
+          surface: theme.colorScheme.surface,
+          onSurface: theme.colorScheme.onSurface,
+          onSurfaceVariant: theme.colorScheme.onSurfaceVariant,
+          outlineVariant: theme.colorScheme.outlineVariant,
+          inverseSurface: theme.colorScheme.inverseSurface,
+          onInverseSurface: theme.colorScheme.onInverseSurface,
+          surfaceContainerHighest: theme.colorScheme.surfaceContainerHighest,
+          bodyColor: theme.textTheme.bodyLarge?.color,
+        ),
+    ];
+
+    expect(semanticRoles, [
+      (
+        onPrimary: CandyColors.contrastInk,
+        onSecondary: CandyColors.onDark,
+        tertiary: CandyColors.accent,
+        onTertiary: CandyColors.background,
+        tertiaryContainer: CandyColors.softAccent,
+        onTertiaryContainer: CandyColors.background,
+        error: CandyColors.warmAccent,
+        onError: CandyColors.background,
+        errorContainer: CandyColors.warmAccent,
+        onErrorContainer: CandyColors.background,
+        secondaryContainer: CandyColors.secondaryBrand,
+        onSecondaryContainer: CandyColors.onDark,
+        surface: CandyColors.surface,
+        onSurface: CandyColors.onDark,
+        onSurfaceVariant: CandyColors.softAccent,
+        outlineVariant: CandyColors.softAccent,
+        inverseSurface: CandyColors.surface,
+        onInverseSurface: CandyColors.onDark,
+        surfaceContainerHighest: CandyColors.surface,
+        bodyColor: CandyColors.onDark,
+      ),
+      (
+        onPrimary: CandyColors.contrastInk,
+        onSecondary: CandyColors.onDark,
+        tertiary: CandyColors.accent,
+        onTertiary: CandyColors.background,
+        tertiaryContainer: CandyColors.softAccent,
+        onTertiaryContainer: CandyColors.background,
+        error: CandyColors.warmAccent,
+        onError: CandyColors.background,
+        errorContainer: CandyColors.warmAccent,
+        onErrorContainer: CandyColors.background,
+        secondaryContainer: CandyColors.secondaryBrand,
+        onSecondaryContainer: CandyColors.onDark,
+        surface: CandyColors.surface,
+        onSurface: CandyColors.onDark,
+        onSurfaceVariant: CandyColors.softAccent,
+        outlineVariant: CandyColors.softAccent,
+        inverseSurface: CandyColors.surface,
+        onInverseSurface: CandyColors.onDark,
+        surfaceContainerHighest: CandyColors.surface,
+        bodyColor: CandyColors.onDark,
+      ),
+    ]);
+  });
+
+  test('should style selected filter controls in both brightness modes', () {
+    final themes = [buildCandyLightTheme(), buildCandyDarkTheme()];
+    final selectedStates = <WidgetState>{WidgetState.selected};
+    final unselectedStates = <WidgetState>{};
+
+    final selectedStyles = [
+      for (final theme in themes)
+        (
+          filterBackground: theme.chipTheme.color?.resolve(selectedStates),
+          filterForeground: WidgetStateProperty.resolveAs<Color?>(
+            theme.chipTheme.labelStyle?.color,
+            selectedStates,
+          ),
+          filterUnselectedForeground: WidgetStateProperty.resolveAs<Color?>(
+            theme.chipTheme.labelStyle?.color,
+            unselectedStates,
+          ),
+          filterCheckmark: theme.chipTheme.checkmarkColor,
+          segmentedBackground: theme.segmentedButtonTheme.style?.backgroundColor
+              ?.resolve(selectedStates),
+          segmentedForeground: theme.segmentedButtonTheme.style?.foregroundColor
+              ?.resolve(selectedStates),
+          segmentedUnselectedForeground: theme
+              .segmentedButtonTheme
+              .style
+              ?.foregroundColor
+              ?.resolve(unselectedStates),
+          minimumSize: theme.segmentedButtonTheme.style?.minimumSize?.resolve(
+            selectedStates,
+          ),
+          usesStadiumShape:
+              theme.segmentedButtonTheme.style?.shape?.resolve(selectedStates)
+                  is StadiumBorder,
+        ),
+    ];
+
+    expect(selectedStyles, [
+      (
+        filterBackground: CandyColors.primary,
+        filterForeground: CandyColors.contrastInk,
+        filterUnselectedForeground: CandyColors.onDark,
+        filterCheckmark: CandyColors.contrastInk,
+        segmentedBackground: CandyColors.primary,
+        segmentedForeground: CandyColors.contrastInk,
+        segmentedUnselectedForeground: CandyColors.onDark,
+        minimumSize: const Size(0, CandySpacing.minimumTouchTarget),
+        usesStadiumShape: true,
+      ),
+      (
+        filterBackground: CandyColors.primary,
+        filterForeground: CandyColors.contrastInk,
+        filterUnselectedForeground: CandyColors.onDark,
+        filterCheckmark: CandyColors.contrastInk,
+        segmentedBackground: CandyColors.primary,
+        segmentedForeground: CandyColors.contrastInk,
+        segmentedUnselectedForeground: CandyColors.onDark,
+        minimumSize: const Size(0, CandySpacing.minimumTouchTarget),
+        usesStadiumShape: true,
+      ),
+    ]);
+  });
+
+  test('should use background canvas and raised surface in both modes', () {
+    final themes = [buildCandyLightTheme(), buildCandyDarkTheme()];
+
+    final surfaces = [
+      for (final theme in themes)
+        (
+          scaffold: theme.scaffoldBackgroundColor,
+          card: theme.cardTheme.color,
+          bottomSheet: theme.bottomSheetTheme.backgroundColor,
+          modalBottomSheet: theme.bottomSheetTheme.modalBackgroundColor,
+          dialog: theme.dialogTheme.backgroundColor,
+        ),
+    ];
+
+    expect(surfaces, [
+      (
+        scaffold: CandyColors.background,
+        card: CandyColors.surface,
+        bottomSheet: CandyColors.surface,
+        modalBottomSheet: CandyColors.surface,
+        dialog: CandyColors.surface,
+      ),
+      (
+        scaffold: CandyColors.background,
+        card: CandyColors.surface,
+        bottomSheet: CandyColors.surface,
+        modalBottomSheet: CandyColors.surface,
+        dialog: CandyColors.surface,
+      ),
+    ]);
+  });
 
   test(
     'should expose shared spacing shape and motion tokens when requested',
@@ -36,7 +261,7 @@ void main() {
 
     expect(theme.useMaterial3, isTrue);
     expect(theme.extension<CandyThemeTokens>(), isNotNull);
-    expect(theme.colorScheme.primary, CandyColors.coral);
+    expect(theme.colorScheme.primary, CandyColors.primary);
     expect(theme.textTheme.displaySmall?.fontFamily, CandyTypography.display);
     expect(
       theme.textTheme.displaySmall?.fontWeight,
@@ -67,10 +292,10 @@ void main() {
 
     expect(theme.brightness, Brightness.dark);
     expect(theme.colorScheme.brightness, Brightness.dark);
-    expect(theme.colorScheme.surface, isNot(CandyColors.canvas));
-    expect(theme.colorScheme.onSurface, isNot(CandyColors.ink));
-    expect(theme.scaffoldBackgroundColor, theme.colorScheme.surface);
-    expect(theme.textTheme.bodyLarge?.color, theme.colorScheme.onSurface);
+    expect(theme.colorScheme.surface, CandyColors.surface);
+    expect(theme.colorScheme.onSurface, CandyColors.onDark);
+    expect(theme.scaffoldBackgroundColor, CandyColors.background);
+    expect(theme.textTheme.bodyLarge?.color, CandyColors.onDark);
   });
 
   test(
@@ -79,8 +304,9 @@ void main() {
       final theme = buildCandyLightTheme();
 
       expect(theme.brightness, Brightness.light);
-      expect(theme.colorScheme.surface, CandyColors.canvas);
-      expect(theme.colorScheme.onSurface, CandyColors.ink);
+      expect(theme.colorScheme.surface, CandyColors.surface);
+      expect(theme.colorScheme.onSurface, CandyColors.onDark);
+      expect(theme.scaffoldBackgroundColor, CandyColors.background);
     },
   );
 
@@ -88,36 +314,36 @@ void main() {
     final theme = buildCandyTheme();
     final tokens = theme.extension<CandyThemeTokens>();
 
-    expect(tokens?.canvas, CandyColors.canvas);
+    expect(tokens?.canvas, CandyColors.background);
     expect(tokens?.cardRadius, CandyShapes.card);
     expect(tokens?.standardMotion, CandyMotion.standard);
   });
 
   test('should copy selected theme tokens when overrides are supplied', () {
     const original = CandyThemeTokens(
-      canvas: CandyColors.canvas,
+      canvas: CandyColors.background,
       cardRadius: CandyShapes.card,
       standardMotion: CandyMotion.standard,
     );
 
     final copied = original.copyWith(
-      canvas: CandyColors.lemon,
+      canvas: CandyColors.softAccent,
       cardRadius: CandyShapes.pill,
     );
 
-    expect(copied.canvas, CandyColors.lemon);
+    expect(copied.canvas, CandyColors.softAccent);
     expect(copied.cardRadius, CandyShapes.pill);
     expect(copied.standardMotion, CandyMotion.standard);
   });
 
   test('should interpolate theme tokens when another theme is supplied', () {
     const original = CandyThemeTokens(
-      canvas: CandyColors.canvas,
+      canvas: CandyColors.background,
       cardRadius: CandyShapes.card,
       standardMotion: CandyMotion.standard,
     );
     const target = CandyThemeTokens(
-      canvas: CandyColors.lemon,
+      canvas: CandyColors.softAccent,
       cardRadius: CandyShapes.pill,
       standardMotion: Duration(milliseconds: 500),
     );
@@ -126,7 +352,7 @@ void main() {
 
     expect(
       interpolated.canvas,
-      Color.lerp(CandyColors.canvas, CandyColors.lemon, 0.5),
+      Color.lerp(CandyColors.background, CandyColors.softAccent, 0.5),
     );
     expect(interpolated.cardRadius, 509.5);
     expect(interpolated.standardMotion, const Duration(milliseconds: 500));
@@ -136,7 +362,7 @@ void main() {
     'should retain tokens when interpolation receives another extension type',
     () {
       const original = CandyThemeTokens(
-        canvas: CandyColors.canvas,
+        canvas: CandyColors.background,
         cardRadius: CandyShapes.card,
         standardMotion: CandyMotion.standard,
       );

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.11 — 2026-08-13
+
+- Explore Jellyfilter in its new Violet-to-Blue identity across both light and
+  dark appearance modes.
+- Enjoy clearer actions, filters, panels, highlights, and feedback with Deep
+  Sea, Abyss, Net Teal, Jelly Lavender, and Jelly Blush accents.
+
 ## 1.0.10 — 2026-08-13
 
 - Meet Jellyfilter, the new app identity with supplied jellyfish artwork across
