@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.8 — 2026-08-13
+
+- Keep discovery titles visible to the bottom of the screen instead of leaving
+  a large blank area after filters or the keyboard close.
+
 ## 1.0.7 — 2026-08-13
 
 - Remove the remaining empty space below title details, including on devices
