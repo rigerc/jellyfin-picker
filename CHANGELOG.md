@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.9 — 2026-08-13
+
+- Fill tall Android screens with discovery titles instead of leaving unused
+  space beneath the grid.
+
 ## 1.0.8 — 2026-08-13
 
 - Keep discovery titles visible to the bottom of the screen instead of leaving
