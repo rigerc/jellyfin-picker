@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.6 — 2026-08-13
+
+- Prevent the title details sheet from covering the lower part of the screen
+  with a blank overlay when its content is shorter than the viewport.
+
 ## 1.0.5 — 2026-08-13
 
 - Keep the saved session available when Jellyfin rejects an expired token so
