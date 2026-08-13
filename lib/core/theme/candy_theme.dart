@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 
-/// Semantic colors for the bright candy-collage visual language.
+/// Semantic colors for the violet-to-blue signature palette.
 abstract final class CandyColors {
-  static const canvas = Color(0xFFFFF7ED);
-  static const paper = Color(0xFFFFFFFF);
-  static const coral = Color(0xFFFF6B6B);
-  static const orange = Color(0xFFFF9F43);
-  static const aqua = Color(0xFF4ECDC4);
-  static const lemon = Color(0xFFFFD166);
-  static const ink = Color(0xFF2D3047);
-  static const mint = Color(0xFF6BCB77);
-  static const berry = Color(0xFFD1495B);
-  static const amber = Color(0xFFF4A261);
-  static const darkCanvas = Color(0xFF19151F);
-  static const darkPaper = Color(0xFF2A2330);
-  static const darkInk = Color(0xFFFFF7ED);
+  static const primary = Color(0xFF8B5CF6);
+  static const secondaryBrand = Color(0xFF4257CE);
+  static const accent = Color(0xFF7FE6D2);
+  static const softAccent = Color(0xFFC9AEEE);
+  static const warmAccent = Color(0xFFF2A6C2);
+  static const surface = Color(0xFF211A48);
+  static const background = Color(0xFF141033);
+  static const onDark = Color(0xFFF0EAFB);
+  static const contrastInk = Color(0xFF000000);
 }
 
 /// Shared spacing values used by the app shell and future features.
@@ -123,28 +119,50 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
   final isDark = brightness == Brightness.dark;
   final colorScheme = isDark
       ? const ColorScheme.dark(
-          primary: CandyColors.coral,
-          onPrimary: CandyColors.ink,
-          secondary: CandyColors.orange,
-          onSecondary: CandyColors.ink,
-          tertiary: CandyColors.aqua,
-          onTertiary: CandyColors.ink,
-          surface: CandyColors.darkCanvas,
-          onSurface: CandyColors.darkInk,
-          error: CandyColors.berry,
-          onError: CandyColors.ink,
+          primary: CandyColors.primary,
+          onPrimary: CandyColors.contrastInk,
+          secondary: CandyColors.secondaryBrand,
+          onSecondary: CandyColors.onDark,
+          secondaryContainer: CandyColors.secondaryBrand,
+          onSecondaryContainer: CandyColors.onDark,
+          tertiary: CandyColors.accent,
+          onTertiary: CandyColors.background,
+          tertiaryContainer: CandyColors.softAccent,
+          onTertiaryContainer: CandyColors.background,
+          surface: CandyColors.surface,
+          onSurface: CandyColors.onDark,
+          onSurfaceVariant: CandyColors.softAccent,
+          surfaceContainerHighest: CandyColors.surface,
+          outlineVariant: CandyColors.softAccent,
+          inverseSurface: CandyColors.surface,
+          onInverseSurface: CandyColors.onDark,
+          error: CandyColors.warmAccent,
+          onError: CandyColors.background,
+          errorContainer: CandyColors.warmAccent,
+          onErrorContainer: CandyColors.background,
         )
       : const ColorScheme.light(
-          primary: CandyColors.coral,
-          onPrimary: CandyColors.ink,
-          secondary: CandyColors.orange,
-          onSecondary: CandyColors.ink,
-          tertiary: CandyColors.aqua,
-          onTertiary: CandyColors.ink,
-          surface: CandyColors.canvas,
-          onSurface: CandyColors.ink,
-          error: CandyColors.berry,
-          onError: CandyColors.ink,
+          primary: CandyColors.primary,
+          onPrimary: CandyColors.contrastInk,
+          secondary: CandyColors.secondaryBrand,
+          onSecondary: CandyColors.onDark,
+          secondaryContainer: CandyColors.secondaryBrand,
+          onSecondaryContainer: CandyColors.onDark,
+          tertiary: CandyColors.accent,
+          onTertiary: CandyColors.background,
+          tertiaryContainer: CandyColors.softAccent,
+          onTertiaryContainer: CandyColors.background,
+          surface: CandyColors.surface,
+          onSurface: CandyColors.onDark,
+          onSurfaceVariant: CandyColors.softAccent,
+          surfaceContainerHighest: CandyColors.surface,
+          outlineVariant: CandyColors.softAccent,
+          inverseSurface: CandyColors.surface,
+          onInverseSurface: CandyColors.onDark,
+          error: CandyColors.warmAccent,
+          onError: CandyColors.background,
+          errorContainer: CandyColors.warmAccent,
+          onErrorContainer: CandyColors.background,
         );
   final baseTextTheme =
       (isDark ? ThemeData.dark() : ThemeData.light()).textTheme;
@@ -190,17 +208,17 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
   return ThemeData(
     brightness: brightness,
     useMaterial3: true,
-    scaffoldBackgroundColor: colorScheme.surface,
+    scaffoldBackgroundColor: CandyColors.background,
     colorScheme: colorScheme,
     cardTheme: CardThemeData(
-      color: isDark ? CandyColors.darkPaper : CandyColors.paper,
+      color: CandyColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(CandyShapes.card),
       ),
     ),
     bottomSheetTheme: BottomSheetThemeData(
-      backgroundColor: isDark ? CandyColors.darkPaper : CandyColors.paper,
-      modalBackgroundColor: isDark ? CandyColors.darkPaper : CandyColors.paper,
+      backgroundColor: CandyColors.surface,
+      modalBackgroundColor: CandyColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(CandyShapes.card),
@@ -208,9 +226,23 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
       ),
     ),
     dialogTheme: DialogThemeData(
-      backgroundColor: isDark ? CandyColors.darkPaper : CandyColors.paper,
+      backgroundColor: CandyColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(CandyShapes.card),
+      ),
+    ),
+    chipTheme: ChipThemeData(
+      color: WidgetStateProperty.resolveWith<Color?>(
+        (states) =>
+            states.contains(WidgetState.selected) ? CandyColors.primary : null,
+      ),
+      checkmarkColor: CandyColors.contrastInk,
+      labelStyle: textTheme.labelLarge?.copyWith(
+        color: WidgetStateColor.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? CandyColors.contrastInk
+              : CandyColors.onDark,
+        ),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -258,6 +290,16 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
     ),
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+          (states) => states.contains(WidgetState.selected)
+              ? CandyColors.primary
+              : null,
+        ),
+        foregroundColor: WidgetStateProperty.resolveWith<Color?>(
+          (states) => states.contains(WidgetState.selected)
+              ? CandyColors.contrastInk
+              : CandyColors.onDark,
+        ),
         minimumSize: const WidgetStatePropertyAll<Size>(
           Size(0, CandySpacing.minimumTouchTarget),
         ),
@@ -283,7 +325,7 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
     ),
     extensions: <ThemeExtension<dynamic>>[
       CandyThemeTokens(
-        canvas: colorScheme.surface,
+        canvas: CandyColors.background,
         cardRadius: CandyShapes.card,
         standardMotion: CandyMotion.standard,
       ),
