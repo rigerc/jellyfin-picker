@@ -153,7 +153,9 @@ final class DiscoveryRobot {
 
   Future<void> toggleFirstFavorite() async {
     final favorite = find.byKey(WidgetKeys.discoveryFavorite('movie-1'));
-    await tester.ensureVisible(favorite);
+    final position = _gridScrollableState.position;
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
     await tester.tap(favorite);
     await tester.pump();
   }

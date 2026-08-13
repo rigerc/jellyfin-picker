@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jellyfin_picker/app.dart';
-import 'shared/app_robot.dart';
-import 'shared/connection_robot.dart';
-import 'shared/fake_connection_repository.dart';
+import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
 import 'package:jellyfin_picker/features/connection/domain/entities/stored_session.dart';
 import 'package:jellyfin_picker/features/connection/domain/repositories/connection_repository.dart';
+import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
+import 'package:jellyfin_picker/features/discovery/presentation/discovery_page.dart';
+
+import 'shared/app_robot.dart';
+import 'shared/connection_robot.dart';
+import 'shared/discovery_robot.dart';
+import 'shared/fake_connection_repository.dart';
+import 'shared/fake_discovery_store.dart';
 
 void main() {
   testWidgets('should render the localized app shell when English is active', (
@@ -89,6 +95,39 @@ void main() {
     expect(receivedSession?.accessToken, 'secret-token');
     router.dispose();
   });
+
+  testWidgets('should fill a tall Android viewport through the app router', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(411, 923);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final cubit = DiscoveryCubit(
+      store: ImmediateDiscoveryStore(),
+      scopeKey: 'server/user',
+      selector: FakeDiscoverySelector('movie-0'),
+    );
+    await cubit.replaceCandidates(
+      List<CatalogCandidate>.generate(20, _candidate),
+    );
+    addTearDown(cubit.close);
+    final router = buildAppRouter(
+      connectionRepository: FakeConnectionRepository(
+        restoreResult: SessionRestored(_session()),
+      ),
+      authenticatedBuilder: (context, session) => DiscoveryPage(cubit: cubit),
+    );
+    addTearDown(router.dispose);
+    final connectionRobot = ConnectionRobot(tester);
+    final discoveryRobot = DiscoveryRobot(tester);
+
+    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpAndSettle();
+    await connectionRobot.tapExplore();
+
+    discoveryRobot.expectGridReachesUsableBottom(bottomInset: 0);
+  });
 }
 
 StoredSession _session() => const StoredSession(
@@ -97,4 +136,12 @@ StoredSession _session() => const StoredSession(
   userId: 'user-id',
   username: 'alice',
   deviceId: 'device-id',
+);
+
+CatalogCandidate _candidate(int index) => CatalogCandidate(
+  id: 'movie-$index',
+  name: 'Movie $index',
+  mediaType: CatalogMediaType.movie,
+  poster: const CatalogImage.fallback(),
+  backdrop: const CatalogImage.fallback(),
 );

@@ -5,8 +5,6 @@ import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_filter.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
-import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_snapshot.dart';
-import 'package:jellyfin_picker/features/discovery/domain/repositories/discovery_store.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/discovery_page.dart';
 import 'package:jellyfin_picker/l10n/generated/app_localizations.dart';
 
@@ -58,6 +56,61 @@ void main() {
         topInset: CandySpacing.page,
         bottomInset: CandySpacing.page,
         bottomViewInset: 120,
+      );
+
+      robot.expectGridReachesUsableBottom(bottomInset: CandySpacing.page);
+      await cubit.close();
+    },
+  );
+
+  testWidgets('should fill a tall Android viewport without a keyboard inset', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(411, 923);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final cubit = _cubit();
+    await cubit.replaceCandidates(
+      List<CatalogCandidate>.generate(
+        200,
+        (index) => _candidate(id: 'movie-$index', name: 'Movie $index'),
+      ),
+    );
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(
+      tester,
+      cubit,
+      topInset: CandySpacing.page,
+      bottomInset: CandySpacing.page,
+    );
+
+    robot.expectGridReachesUsableBottom(bottomInset: CandySpacing.page);
+    await cubit.close();
+  });
+
+  testWidgets(
+    'should fill the screenshot-sized Android viewport without a keyboard inset',
+    (tester) async {
+      tester.view.physicalSize = const Size(393, 881);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final cubit = _cubit();
+      await cubit.replaceCandidates(
+        List<CatalogCandidate>.generate(
+          20,
+          (index) => _candidate(id: 'movie-$index', name: 'Movie $index'),
+        ),
+      );
+      final robot = DiscoveryRobot(tester);
+
+      await _pumpPage(
+        tester,
+        cubit,
+        topInset: CandySpacing.page,
+        bottomInset: CandySpacing.page,
       );
 
       robot.expectGridReachesUsableBottom(bottomInset: CandySpacing.page);
@@ -521,25 +574,10 @@ Future<void> _pumpPage(
 }
 
 DiscoveryCubit _cubit() => DiscoveryCubit(
-  store: _ImmediateDiscoveryStore(),
+  store: ImmediateDiscoveryStore(),
   scopeKey: 'server/user',
   selector: FakeDiscoverySelector('movie-1'),
 );
-
-final class _ImmediateDiscoveryStore implements DiscoveryStore {
-  DiscoverySnapshot? snapshot;
-
-  @override
-  Future<void> clear(String scope) async => snapshot = null;
-
-  @override
-  Future<DiscoverySnapshot?> read(String scope) async => snapshot;
-
-  @override
-  Future<void> write(String scope, DiscoverySnapshot value) async {
-    snapshot = value;
-  }
-}
 
 CatalogCandidate _candidate({
   String id = 'movie-1',

@@ -4,15 +4,9 @@ import 'package:jellyfin_picker/core/keys/widget_keys.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
-import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_mode.dart';
-import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_state.dart';
-import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_grid.dart';
-import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_header.dart';
-import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_sheet.dart';
-import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_mode_selector.dart';
-import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_shuffle.dart';
-import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_swipe.dart';
-import 'package:jellyfin_picker/l10n/generated/app_localizations.dart';
+import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_clear_dialog.dart';
+import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_controls.dart';
+import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_mode_switcher.dart';
 
 typedef FavoriteToggle = Future<bool> Function(CatalogCandidate candidate);
 
@@ -48,107 +42,35 @@ final class _DiscoveryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Scaffold(
       key: WidgetKeys.discoveryPage,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(CandySpacing.page),
-          child: Column(
-            spacing: CandySpacing.cardGap,
-            children: <Widget>[
-              Flexible(
-                fit: FlexFit.loose,
-                child: SingleChildScrollView(
-                  child: Column(
-                    spacing: CandySpacing.cardGap,
-                    children: <Widget>[
-                      BlocBuilder<DiscoveryCubit, DiscoveryState>(
-                        buildWhen: (previous, current) =>
-                            previous.filteredCandidates.length !=
-                                current.filteredCandidates.length ||
-                            previous.filter != current.filter,
-                        builder: (context, state) => DiscoveryHeader(
-                          candidateCount: state.filteredCandidates.length,
-                          filter: state.filter,
-                          onFilterChanged: (filter) => context
-                              .read<DiscoveryCubit>()
-                              .updateFilter(filter),
-                          onOpenFilters: () => showDiscoveryFilters(
-                            context,
-                            state.filter,
-                            candidates: state.candidates,
-                          ),
-                          onClear: () => _confirmClear(context),
-                        ),
-                      ),
-                      const DiscoveryModeSelector(),
-                    ],
+          child: LayoutBuilder(
+            builder: (context, constraints) => Column(
+              spacing: CandySpacing.cardGap,
+              children: <Widget>[
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: constraints.maxHeight / 2,
+                  ),
+                  child: DiscoveryControls(
+                    onClear: () => confirmClearDiscovery(context),
                   ),
                 ),
-              ),
-              Expanded(
-                child: BlocBuilder<DiscoveryCubit, DiscoveryState>(
-                  builder: (context, state) => AnimatedSwitcher(
-                    key: WidgetKeys.discoveryModeTransition,
-                    duration: reduceMotion
-                        ? Duration.zero
-                        : CandyMotion.standard,
-                    switchInCurve: Curves.easeOutBack,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) =>
-                        FadeTransition(opacity: animation, child: child),
-                    child: KeyedSubtree(
-                      key: ValueKey<DiscoveryMode>(state.mode),
-                      child: switch (state.mode) {
-                        DiscoveryMode.grid => DiscoveryGrid(
-                          candidates: state.filteredCandidates,
-                          onToggleFavorite: onToggleFavorite,
-                          imageHeaders: imageHeaders,
-                        ),
-                        DiscoveryMode.swipe => DiscoverySwipe(
-                          candidates: state.undecidedCandidates,
-                          onToggleFavorite: onToggleFavorite,
-                          imageHeaders: imageHeaders,
-                        ),
-                        DiscoveryMode.shuffle => DiscoveryShuffle(
-                          state: state,
-                          onToggleFavorite: onToggleFavorite,
-                          imageHeaders: imageHeaders,
-                        ),
-                      },
-                    ),
+                Expanded(
+                  child: DiscoveryModeSwitcher(
+                    onToggleFavorite: onToggleFavorite,
+                    imageHeaders: imageHeaders,
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
-  }
-
-  Future<void> _confirmClear(BuildContext context) async {
-    final localization = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Text(localization.discoveryClearConfirmation),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(localization.discoveryCancelLabel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(localization.discoveryConfirmClearLabel),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true && context.mounted) {
-      await context.read<DiscoveryCubit>().clearDiscovery();
-    }
   }
 }
