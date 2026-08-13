@@ -16,6 +16,7 @@ abstract final class WidgetKeys {
   static const connectionLogoutButton = Key('connection-logout-button');
   static const connectionExploreButton = Key('connection-explore-button');
   static const discoveryPage = Key('discovery-page');
+  static const discoveryModeNavigation = Key('discovery-mode-navigation');
   static const discoveryGridMode = Key('discovery-grid-mode');
   static const discoverySwipeMode = Key('discovery-swipe-mode');
   static const discoveryShuffleMode = Key('discovery-shuffle-mode');
@@ -29,6 +30,7 @@ abstract final class WidgetKeys {
   static const discoveryRevealButton = Key('discovery-reveal-button');
   static const discoveryDetails = Key('discovery-details');
   static const discoveryClearButton = Key('discovery-clear-button');
+  static const discoveryMoreButton = Key('discovery-more-button');
   static const discoveryFilterButton = Key('discovery-filter-button');
   static const discoveryRecentFilter = Key('discovery-recent-filter');
   static const discoveryUnwatchedFilter = Key('discovery-unwatched-filter');

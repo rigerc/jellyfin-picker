@@ -75,6 +75,24 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
   Widget build(BuildContext context) {
     final state = context.watch<DiscoveryCubit>().state;
     return DiscoveryFilterBody(
+      quickFilters: (
+        recent: _addedWithin == CatalogAddedWindow.thirtyDays,
+        unwatched: _watched == DiscoveryTriState.no,
+        favorites: _favorite == DiscoveryTriState.yes,
+        onRecentChanged: (selected) => setState(
+          () => _addedWithin = selected ? CatalogAddedWindow.thirtyDays : null,
+        ),
+        onUnwatchedChanged: (selected) => setState(
+          () => _watched = selected
+              ? DiscoveryTriState.no
+              : DiscoveryTriState.any,
+        ),
+        onFavoritesChanged: (selected) => setState(
+          () => _favorite = selected
+              ? DiscoveryTriState.yes
+              : DiscoveryTriState.any,
+        ),
+      ),
       query: (
         searchController: _search,
         sort: _sort,

@@ -7,10 +7,12 @@ import 'package:jellyfin_picker/features/discovery/presentation/widgets/discover
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_preset_section.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_query_sections.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_rating_section.dart';
+import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_quick_filters.dart';
 import 'package:jellyfin_picker/l10n/generated/app_localizations.dart';
 
 final class DiscoveryFilterBody extends StatelessWidget {
   const DiscoveryFilterBody({
+    required this.quickFilters,
     required this.query,
     required this.mediaTypes,
     required this.ratings,
@@ -21,6 +23,7 @@ final class DiscoveryFilterBody extends StatelessWidget {
     super.key,
   });
 
+  final DiscoveryQuickFilterData quickFilters;
   final DiscoveryQueryFilterData query;
   final DiscoveryMediaTypeFilterData mediaTypes;
   final DiscoveryRatingFilterData ratings;
@@ -47,6 +50,8 @@ final class DiscoveryFilterBody extends StatelessWidget {
               l10n.discoveryFilterSheetTitle,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
+            DiscoveryQuickFilters(data: quickFilters),
+            const SizedBox(height: CandySpacing.cardGap),
             OutlinedButton.icon(
               key: WidgetKeys.discoveryResetFilters,
               onPressed: onReset,

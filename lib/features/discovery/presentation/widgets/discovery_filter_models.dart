@@ -11,6 +11,15 @@ typedef DiscoveryQueryFilterData = ({
   ValueChanged<CatalogAddedWindow?> onAddedWithinChanged,
 });
 
+typedef DiscoveryQuickFilterData = ({
+  bool recent,
+  bool unwatched,
+  bool favorites,
+  ValueChanged<bool> onRecentChanged,
+  ValueChanged<bool> onUnwatchedChanged,
+  ValueChanged<bool> onFavoritesChanged,
+});
+
 typedef DiscoveryMediaTypeFilterData = ({
   Set<CatalogMediaType> selected,
   void Function(CatalogMediaType type, bool selected) onChanged,

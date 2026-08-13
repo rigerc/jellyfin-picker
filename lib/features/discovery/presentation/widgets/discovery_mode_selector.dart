@@ -12,36 +12,37 @@ final class DiscoveryModeSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
     final selected = context.select((DiscoveryCubit cubit) => cubit.state.mode);
-    return SegmentedButton<DiscoveryMode>(
-      segments: <ButtonSegment<DiscoveryMode>>[
-        ButtonSegment<DiscoveryMode>(
-          value: DiscoveryMode.grid,
-          label: Text(
-            localization.discoveryGridLabel,
-            key: WidgetKeys.discoveryGridMode,
-          ),
-          icon: const Icon(Icons.grid_view_rounded),
-        ),
-        ButtonSegment<DiscoveryMode>(
-          value: DiscoveryMode.swipe,
-          label: Text(
-            localization.discoverySwipeLabel,
-            key: WidgetKeys.discoverySwipeMode,
-          ),
-          icon: const Icon(Icons.swipe_rounded),
-        ),
-        ButtonSegment<DiscoveryMode>(
-          value: DiscoveryMode.shuffle,
-          label: Text(
-            localization.discoveryShuffleLabel,
-            key: WidgetKeys.discoveryShuffleMode,
-          ),
-          icon: const Icon(Icons.casino_outlined),
-        ),
-      ],
-      selected: <DiscoveryMode>{selected},
-      onSelectionChanged: (modes) =>
-          context.read<DiscoveryCubit>().setMode(modes.single),
+    final destinations = <({Key key, String label, IconData icon})>[
+      (
+        key: WidgetKeys.discoveryGridMode,
+        label: localization.discoveryGridLabel,
+        icon: Icons.grid_view_rounded,
+      ),
+      (
+        key: WidgetKeys.discoverySwipeMode,
+        label: localization.discoverySwipeLabel,
+        icon: Icons.swipe_rounded,
+      ),
+      (
+        key: WidgetKeys.discoveryShuffleMode,
+        label: localization.discoveryShuffleLabel,
+        icon: Icons.casino_outlined,
+      ),
+    ];
+    return NavigationBar(
+      key: WidgetKeys.discoveryModeNavigation,
+      selectedIndex: DiscoveryMode.values.indexOf(selected),
+      destinations: destinations
+          .map(
+            (destination) => NavigationDestination(
+              icon: Icon(destination.icon),
+              label: destination.label,
+              key: destination.key,
+            ),
+          )
+          .toList(growable: false),
+      onDestinationSelected: (index) =>
+          context.read<DiscoveryCubit>().setMode(DiscoveryMode.values[index]),
     );
   }
 }

@@ -113,12 +113,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoveryTitle => 'Movie night starts here';
 
   @override
-  String discoveryHeaderSubtitle(int count) {
+  String discoveryCandidateCount(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count titles ready to explore.',
-      one: '1 title ready to explore.',
+      other: '$count titles',
+      one: '1 title',
     );
     return '$_temp0';
   }
@@ -180,6 +180,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoveryClearLabel => 'Clear discovery data';
 
   @override
+  String get discoveryMoreActionsLabel => 'More actions';
+
+  @override
   String get discoveryFiltersLabel => 'Filters';
 
   @override
@@ -190,6 +193,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoveryQuickFavoritesLabel => 'Favorites';
+
+  @override
+  String get discoveryQuickFiltersLabel => 'Quick filters';
 
   @override
   String get discoveryActiveFilterLabel => 'Filters active';

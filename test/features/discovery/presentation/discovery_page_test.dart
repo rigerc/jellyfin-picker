@@ -34,6 +34,64 @@ void main() {
     await cubit.close();
   });
 
+  testWidgets('should keep mode navigation persistent across peer modes', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+    expect(find.byType(NavigationBar), findsOneWidget);
+
+    await robot.openSwipe();
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(
+      tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex,
+      1,
+    );
+    await cubit.close();
+  });
+
+  testWidgets('should present a compact task-focused discovery header', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+
+    await _pumpPage(tester, cubit);
+    final header = find.ancestor(
+      of: find.byKey(WidgetKeys.discoveryFilterButton),
+      matching: find.byType(Card),
+    );
+
+    expect(
+      tester.getSize(header).height,
+      lessThanOrEqualTo(CandySpacing.minimumTouchTarget * 2),
+    );
+    expect(find.text('Jellyfilter'), findsNothing);
+    expect(find.text('Movie night starts here'), findsOneWidget);
+    expect(find.text('1 title'), findsOneWidget);
+    expect(find.byType(PopupMenuButton<void>), findsOneWidget);
+    await cubit.close();
+  });
+
+  testWidgets('should open clear discovery from the compact overflow', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+
+    await _pumpPage(tester, cubit);
+    await tester.tap(find.byKey(WidgetKeys.discoveryMoreButton));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(WidgetKeys.discoveryClearButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(AlertDialog), findsOneWidget);
+    await cubit.close();
+  });
+
   testWidgets(
     'should fill the usable viewport when the grid has multiple rows',
     (tester) async {
@@ -58,7 +116,7 @@ void main() {
         bottomViewInset: 120,
       );
 
-      robot.expectGridReachesUsableBottom(bottomInset: CandySpacing.page);
+      robot.expectGridMeetsModeNavigation();
       await cubit.close();
     },
   );
@@ -86,7 +144,7 @@ void main() {
       bottomInset: CandySpacing.page,
     );
 
-    robot.expectGridReachesUsableBottom(bottomInset: CandySpacing.page);
+    robot.expectGridMeetsModeNavigation();
     await cubit.close();
   });
 
@@ -113,7 +171,7 @@ void main() {
         bottomInset: CandySpacing.page,
       );
 
-      robot.expectGridReachesUsableBottom(bottomInset: CandySpacing.page);
+      robot.expectGridMeetsModeNavigation();
       await cubit.close();
     },
   );
@@ -254,8 +312,11 @@ void main() {
     final robot = DiscoveryRobot(tester);
 
     await _pumpPage(tester, cubit);
-    robot.expectQuickFiltersVisible();
+    robot.expectQuickFiltersHiddenFromDiscovery();
     robot.expectFiltersInactive();
+    await tester.tap(find.byKey(WidgetKeys.discoveryFilterButton));
+    await tester.pumpAndSettle();
+    robot.expectQuickFiltersVisibleInSheet();
     expect(
       tester.getSemantics(find.byKey(WidgetKeys.discoveryRecentFilter)).label,
       contains('Added in last 30 days'),
@@ -272,13 +333,16 @@ void main() {
           .label,
       contains('Favorites'),
     );
-    await robot.tapRecentThirtyDays();
-
-    expect(cubit.state.filter.isActive, isTrue);
+    await tester.tap(find.byKey(WidgetKeys.discoveryRecentFilter));
+    await tester.pump();
     await tester.tap(find.byKey(WidgetKeys.discoveryUnwatchedFilter));
     await tester.pump();
     await tester.tap(find.byKey(WidgetKeys.discoveryFavoritesFilter));
     await tester.pump();
+    await robot.applyOpenFilters();
+
+    expect(cubit.state.filter.isActive, isTrue);
+    expect(cubit.state.filter.addedWithin, CatalogAddedWindow.thirtyDays);
     expect(cubit.state.filter.watched, isFalse);
     expect(cubit.state.filter.favorite, isTrue);
     robot.expectFiltersActive();
@@ -482,7 +546,7 @@ void main() {
     await cubit.close();
   });
 
-  testWidgets('should present discovery as a spacious cinema marquee', (
+  testWidgets('should retain Jellyfilter identity in the compact header', (
     tester,
   ) async {
     final cubit = _cubit();
@@ -491,7 +555,7 @@ void main() {
 
     await _pumpPage(tester, cubit);
 
-    robot.expectCinemaMarquee(candidateCount: 1);
+    robot.expectCompactDiscoveryHeader(candidateCount: 1);
     await cubit.close();
   });
 

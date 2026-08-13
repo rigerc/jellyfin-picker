@@ -140,7 +140,7 @@ void main() {
     await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
 
-    discoveryRobot.expectGridReachesUsableBottom(bottomInset: 0);
+    discoveryRobot.expectGridMeetsModeNavigation();
   });
 }
 

@@ -19,15 +19,15 @@ final class DiscoveryRobot {
     expect(find.byKey(WidgetKeys.discoveryGrid), findsOneWidget);
   }
 
-  void expectGridReachesUsableBottom({required double bottomInset}) {
-    final viewportHeight =
-        tester.view.physicalSize.height / tester.view.devicePixelRatio;
-    final expectedBottom = viewportHeight - bottomInset - CandySpacing.page;
+  void expectGridMeetsModeNavigation() {
     final gridBottom = tester
         .getBottomLeft(find.byKey(WidgetKeys.discoveryGrid))
         .dy;
+    final navigationTop = tester
+        .getTopLeft(find.byKey(WidgetKeys.discoveryModeNavigation))
+        .dy;
 
-    expect(gridBottom, closeTo(expectedBottom, 0.01));
+    expect(navigationTop - gridBottom, closeTo(CandySpacing.compact, 0.01));
   }
 
   Future<void> scrollGridToBottom() async {
@@ -45,10 +45,27 @@ final class DiscoveryRobot {
     expect(candidateRect.overlaps(gridRect), isTrue);
   }
 
-  void expectQuickFiltersVisible() {
+  void expectQuickFiltersHiddenFromDiscovery() {
+    expect(find.byKey(WidgetKeys.discoveryRecentFilter), findsNothing);
+    expect(find.byKey(WidgetKeys.discoveryUnwatchedFilter), findsNothing);
+    expect(find.byKey(WidgetKeys.discoveryFavoritesFilter), findsNothing);
+  }
+
+  void expectQuickFiltersVisibleInSheet() {
+    final sheet = find.byKey(WidgetKeys.discoveryFilterSheet);
     expect(find.byKey(WidgetKeys.discoveryRecentFilter), findsOneWidget);
     expect(find.byKey(WidgetKeys.discoveryUnwatchedFilter), findsOneWidget);
     expect(find.byKey(WidgetKeys.discoveryFavoritesFilter), findsOneWidget);
+    for (final key in <Key>[
+      WidgetKeys.discoveryRecentFilter,
+      WidgetKeys.discoveryUnwatchedFilter,
+      WidgetKeys.discoveryFavoritesFilter,
+    ]) {
+      expect(
+        find.descendant(of: sheet, matching: find.byKey(key)),
+        findsOneWidget,
+      );
+    }
   }
 
   void expectFiltersInactive() {
@@ -60,6 +77,11 @@ final class DiscoveryRobot {
       find.byKey(WidgetKeys.discoveryActiveFilterIndicator),
       findsOneWidget,
     );
+  }
+
+  Future<void> openQuickFilters() async {
+    await tester.tap(find.byKey(WidgetKeys.discoveryFilterButton));
+    await tester.pumpAndSettle();
   }
 
   Future<void> tapRecentThirtyDays() async {
@@ -79,6 +101,17 @@ final class DiscoveryRobot {
 
   Future<void> tapResetFilters() async {
     await tester.tap(find.byKey(WidgetKeys.discoveryResetFilters));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> applyOpenFilters() async {
+    final apply = find.byKey(WidgetKeys.discoveryApplyFilters);
+    await tester.scrollUntilVisible(
+      apply,
+      CandySpacing.section,
+      scrollable: _filterScrollable,
+    );
+    await tester.tap(apply);
     await tester.pumpAndSettle();
   }
 
@@ -291,13 +324,10 @@ final class DiscoveryRobot {
     );
   }
 
-  void expectCinemaMarquee({required int candidateCount}) {
-    expect(find.text('Jellyfilter'), findsOneWidget);
+  void expectCompactDiscoveryHeader({required int candidateCount}) {
+    expect(find.text('Jellyfilter'), findsNothing);
     expect(find.text('Movie night starts here'), findsOneWidget);
-    expect(
-      find.text('$candidateCount title ready to explore.'),
-      findsOneWidget,
-    );
+    expect(find.text('$candidateCount title'), findsOneWidget);
     _expectAssetImage('docs/icons/app-icon.png');
     _expectAssetImage('docs/icons/filter-icon.png');
   }

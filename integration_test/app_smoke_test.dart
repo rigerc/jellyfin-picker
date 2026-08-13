@@ -68,8 +68,11 @@ void main() {
 
     await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
-    discovery.expectQuickFiltersVisible();
+    discovery.expectQuickFiltersHiddenFromDiscovery();
+    await discovery.openQuickFilters();
+    discovery.expectQuickFiltersVisibleInSheet();
     await discovery.tapRecentThirtyDays();
+    await discovery.applyOpenFilters();
     discovery.expectFiltersActive();
 
     await discovery.openFilters();

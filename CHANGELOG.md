@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.12 — 2026-08-13
+
+- Switch among Grid, Swipe, and Shuffle anytime from the persistent bottom
+  menu.
+- See more discovery titles at once with a compact header and live result
+  count.
+- Find Recently added, Unwatched, and Favorites together inside Filters while
+  keeping active filters visible from discovery.
+
 ## 1.0.11 — 2026-08-13
 
 - Explore Jellyfilter in its new Violet-to-Blue identity across both light and

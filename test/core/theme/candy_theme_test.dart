@@ -212,6 +212,32 @@ void main() {
     ]);
   });
 
+  test('should style persistent mode navigation in both brightness modes', () {
+    final themes = [buildCandyLightTheme(), buildCandyDarkTheme()];
+
+    final navigationStyles = [
+      for (final theme in themes)
+        (
+          background: theme.navigationBarTheme.backgroundColor,
+          indicator: theme.navigationBarTheme.indicatorColor,
+          height: theme.navigationBarTheme.height,
+        ),
+    ];
+
+    expect(navigationStyles, [
+      (
+        background: CandyColors.surface,
+        indicator: CandyColors.primary,
+        height: CandySpacing.minimumTouchTarget + CandySpacing.compact * 2,
+      ),
+      (
+        background: CandyColors.surface,
+        indicator: CandyColors.primary,
+        height: CandySpacing.minimumTouchTarget + CandySpacing.compact * 2,
+      ),
+    ]);
+  });
+
   test('should use background canvas and raised surface in both modes', () {
     final themes = [buildCandyLightTheme(), buildCandyDarkTheme()];
 

@@ -288,6 +288,26 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
         ),
       ),
     ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: CandyColors.surface,
+      indicatorColor: CandyColors.primary,
+      indicatorShape: const StadiumBorder(),
+      height: CandySpacing.minimumTouchTarget + CandySpacing.compact * 2,
+      iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
+        (states) => IconThemeData(
+          color: states.contains(WidgetState.selected)
+              ? CandyColors.contrastInk
+              : CandyColors.onDark,
+        ),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>(
+        (states) => textTheme.labelMedium?.copyWith(
+          color: states.contains(WidgetState.selected)
+              ? CandyColors.contrastInk
+              : CandyColors.onDark,
+        ),
+      ),
+    ),
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith<Color?>(
