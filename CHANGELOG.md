@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.10 — 2026-08-13
+
+- Meet Jellyfilter, the new app identity with supplied jellyfish artwork across
+  the launcher, home, discovery, search, and filter surfaces.
+- Open a valid saved Jellyfin server directly into discovery instead of
+  stopping at an extra connection summary.
+- Keep the first-time connection, recovery, and logout paths intact while
+  tightening product copy and image memory usage.
+
 ## 1.0.9 — 2026-08-13
 
 - Fill tall Android screens with discovery titles instead of leaving unused
