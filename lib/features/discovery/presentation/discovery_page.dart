@@ -6,6 +6,7 @@ import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_clear_dialog.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_controls.dart';
+import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_mode_selector.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_mode_switcher.dart';
 
 typedef FavoriteToggle = Future<bool> Function(CatalogCandidate candidate);
@@ -45,29 +46,27 @@ final class _DiscoveryView extends StatelessWidget {
     return Scaffold(
       key: WidgetKeys.discoveryPage,
       resizeToAvoidBottomInset: false,
+      bottomNavigationBar: const DiscoveryModeSelector(),
       body: SafeArea(
+        bottom: false,
         child: Padding(
-          padding: const EdgeInsets.all(CandySpacing.page),
-          child: LayoutBuilder(
-            builder: (context, constraints) => Column(
-              spacing: CandySpacing.cardGap,
-              children: <Widget>[
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: constraints.maxHeight / 2,
-                  ),
-                  child: DiscoveryControls(
-                    onClear: () => confirmClearDiscovery(context),
-                  ),
+          padding: const EdgeInsets.fromLTRB(
+            CandySpacing.page,
+            CandySpacing.page,
+            CandySpacing.page,
+            CandySpacing.compact,
+          ),
+          child: Column(
+            spacing: CandySpacing.cardGap,
+            children: <Widget>[
+              DiscoveryControls(onClear: () => confirmClearDiscovery(context)),
+              Expanded(
+                child: DiscoveryModeSwitcher(
+                  onToggleFavorite: onToggleFavorite,
+                  imageHeaders: imageHeaders,
                 ),
-                Expanded(
-                  child: DiscoveryModeSwitcher(
-                    onToggleFavorite: onToggleFavorite,
-                    imageHeaders: imageHeaders,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

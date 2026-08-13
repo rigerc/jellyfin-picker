@@ -274,11 +274,11 @@ abstract class AppLocalizations {
   /// **'Movie night starts here'**
   String get discoveryTitle;
 
-  /// No description provided for @discoveryHeaderSubtitle.
+  /// No description provided for @discoveryCandidateCount.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 title ready to explore.} other{{count} titles ready to explore.}}'**
-  String discoveryHeaderSubtitle(int count);
+  /// **'{count, plural, =1{1 title} other{{count} titles}}'**
+  String discoveryCandidateCount(int count);
 
   /// No description provided for @discoveryGridLabel.
   ///
@@ -382,6 +382,12 @@ abstract class AppLocalizations {
   /// **'Clear discovery data'**
   String get discoveryClearLabel;
 
+  /// No description provided for @discoveryMoreActionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'More actions'**
+  String get discoveryMoreActionsLabel;
+
   /// No description provided for @discoveryFiltersLabel.
   ///
   /// In en, this message translates to:
@@ -405,6 +411,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Favorites'**
   String get discoveryQuickFavoritesLabel;
+
+  /// No description provided for @discoveryQuickFiltersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick filters'**
+  String get discoveryQuickFiltersLabel;
 
   /// No description provided for @discoveryActiveFilterLabel.
   ///
