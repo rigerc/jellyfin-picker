@@ -47,6 +47,7 @@ void main() {
     await robot.openFirstDetails();
 
     robot.expectDetailsVisible();
+    robot.expectDetailsSheetNotFullHeight();
     await cubit.close();
   });
 
