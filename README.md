@@ -1,8 +1,8 @@
-# Jellyfin Picker
+# Jellyfilter
 
 [![Android CI](https://github.com/rigerc/jellyfin-picker/actions/workflows/android-ci.yml/badge.svg)](https://github.com/rigerc/jellyfin-picker/actions/workflows/android-ci.yml)
 
-Jellyfin Picker is a bright, local-first Flutter companion for discovering a
+Jellyfilter is a bright, local-first Flutter companion for discovering a
 Jellyfin library. The foundation targets Android and iOS, uses Material 3,
 and keeps all runtime configuration ready for `--dart-define` values.
 

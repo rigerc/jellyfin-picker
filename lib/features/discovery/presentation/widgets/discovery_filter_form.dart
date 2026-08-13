@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jellyfin_picker/core/assets/app_assets.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_metadata_section.dart';
@@ -58,7 +59,22 @@ final class DiscoveryFilterBody extends StatelessWidget {
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 labelText: l10n.discoverySearchTitleLabel,
-                prefixIcon: const Icon(Icons.search_rounded),
+                prefixIcon: Padding(
+                  padding: const EdgeInsets.all(CandySpacing.compact),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(CandyShapes.poster),
+                    child: ExcludeSemantics(
+                      child: Image.asset(
+                        AppAssets.searchIcon,
+                        width: CandyIconSize.action,
+                        height: CandyIconSize.action,
+                        cacheWidth: CandyImages.artworkCacheWidth,
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.high,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: CandySpacing.cardGap),

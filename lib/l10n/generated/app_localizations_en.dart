@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Jellyfin Picker';
+  String get appTitle => 'Jellyfilter';
 
   @override
   String get homeHeadline => 'Pick something great';

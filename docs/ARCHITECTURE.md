@@ -1,4 +1,4 @@
-# Jellyfin Picker architecture
+# Jellyfilter architecture
 
 The project keeps cross-cutting concerns in `lib/core/`, app composition and
 concrete route assembly in `lib/app.dart`, and product work in flat feature

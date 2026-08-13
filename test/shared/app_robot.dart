@@ -13,9 +13,9 @@ final class AppRobot {
 
   void expectLocalizedHomeVisible() {
     expectAppShellVisible();
-    expect(find.text('Jellyfin Picker'), findsOneWidget);
+    expect(find.text('Jellyfilter'), findsOneWidget);
     expect(find.text('Pick something great'), findsOneWidget);
-    expect(find.byIcon(Icons.movie_filter_rounded), findsOneWidget);
+    _expectAssetImage('docs/icons/app-icon.png');
   }
 
   void expectSystemThemeConfigured() {
@@ -23,4 +23,20 @@ final class AppRobot {
     expect(app.themeMode, ThemeMode.system);
     expect(app.darkTheme, isNotNull);
   }
+
+  void _expectAssetImage(String assetName) {
+    final images = tester.widgetList<Image>(
+      find.descendant(
+        of: find.byKey(WidgetKeys.appShell),
+        matching: find.byType(Image),
+      ),
+    );
+    expect(images.map((image) => _assetName(image.image)), contains(assetName));
+  }
+
+  String? _assetName(ImageProvider provider) => switch (provider) {
+    AssetImage(:final assetName) => assetName,
+    ResizeImage(imageProvider: AssetImage(:final assetName)) => assetName,
+    _ => null,
+  };
 }

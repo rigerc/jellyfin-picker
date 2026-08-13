@@ -23,7 +23,7 @@ void main() {
     'should retain one router when the app receives an injected instance',
     () {
       final router = buildAppRouter();
-      final app = JellyfinPickerApp(router: router);
+      final app = JellyfilterApp(router: router);
 
       expect(app.router, same(router));
       router.dispose();

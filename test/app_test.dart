@@ -20,7 +20,7 @@ void main() {
     final router = buildAppRouter();
     final robot = AppRobot(tester);
 
-    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
 
     robot.expectLocalizedHomeVisible();
@@ -33,9 +33,9 @@ void main() {
     final router = buildAppRouter();
     final robot = AppRobot(tester);
 
-    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
-    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
 
     robot.expectAppShellVisible();
@@ -46,27 +46,45 @@ void main() {
     final router = buildAppRouter();
     final robot = AppRobot(tester);
 
-    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpWidget(JellyfilterApp(router: router));
 
     robot.expectSystemThemeConfigured();
 
     router.dispose();
   });
 
-  testWidgets('should restore an authenticated summary and logout to form', (
+  testWidgets('should enter discovery when a valid session is restored', (
     tester,
   ) async {
+    const discoveryKey = Key('restored-discovery-test');
     final router = buildAppRouter(
       connectionRepository: FakeConnectionRepository(
         restoreResult: SessionRestored(_session()),
       ),
+      authenticatedBuilder: (context, session) =>
+          const SizedBox(key: discoveryKey),
     );
     final robot = ConnectionRobot(tester);
 
-    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
-    robot.expectSummaryVisible();
-    await robot.tapLogout();
+    robot.expectSummaryAbsent();
+    expect(find.byKey(discoveryKey), findsOneWidget);
+    router.dispose();
+  });
+
+  testWidgets('should show the connection form when no session is stored', (
+    tester,
+  ) async {
+    final router = buildAppRouter(
+      connectionRepository: FakeConnectionRepository(),
+    );
+    final robot = ConnectionRobot(tester);
+
+    await tester.pumpWidget(JellyfilterApp(router: router));
+    await tester.pumpAndSettle();
+
+    robot.expectFormVisible();
     robot.expectSummaryAbsent();
     router.dispose();
   });
@@ -85,11 +103,9 @@ void main() {
         return const SizedBox(key: discoveryKey);
       },
     );
-    final robot = ConnectionRobot(tester);
 
-    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
-    await robot.tapExplore();
 
     expect(find.byKey(discoveryKey), findsOneWidget);
     expect(receivedSession?.accessToken, 'secret-token');
@@ -119,12 +135,10 @@ void main() {
       authenticatedBuilder: (context, session) => DiscoveryPage(cubit: cubit),
     );
     addTearDown(router.dispose);
-    final connectionRobot = ConnectionRobot(tester);
     final discoveryRobot = DiscoveryRobot(tester);
 
-    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
-    await connectionRobot.tapExplore();
 
     discoveryRobot.expectGridReachesUsableBottom(bottomInset: 0);
   });

@@ -2,8 +2,8 @@
 abstract final class MediaBrowserAuthorization {
   static String value({required String deviceId, String? token}) {
     final header = StringBuffer(
-      'MediaBrowser Client="Jellyfin Picker", '
-      'Device="Jellyfin Picker", '
+      'MediaBrowser Client="Jellyfilter", '
+      'Device="Jellyfilter", '
       'DeviceId="$deviceId", Version="1.0.0"',
     );
     if (token != null) {

@@ -292,13 +292,18 @@ final class DiscoveryRobot {
   }
 
   void expectCinemaMarquee({required int candidateCount}) {
-    expect(find.text('Jellyfin Picker'), findsOneWidget);
+    expect(find.text('Jellyfilter'), findsOneWidget);
     expect(find.text('Movie night starts here'), findsOneWidget);
     expect(
       find.text('$candidateCount title ready to explore.'),
       findsOneWidget,
     );
-    expect(find.byIcon(Icons.theaters_rounded), findsOneWidget);
+    _expectAssetImage('docs/icons/app-icon.png');
+    _expectAssetImage('docs/icons/filter-icon.png');
+  }
+
+  void expectSearchArtworkVisible() {
+    _expectAssetImage('docs/icons/search-icon.png');
   }
 
   void expectFilterSelectSpacing(double minimumGap) {
@@ -391,5 +396,19 @@ final class DiscoveryRobot {
     ResizeImage(:final imageProvider) => imageProvider as NetworkImage,
     NetworkImage() => provider,
     _ => throw TestFailure('Expected a network-backed image provider.'),
+  };
+
+  void _expectAssetImage(String assetName) {
+    final assetNames = tester
+        .widgetList<Image>(find.byType(Image))
+        .map((image) => image.image)
+        .map(_assetName);
+    expect(assetNames, contains(assetName));
+  }
+
+  String? _assetName(ImageProvider provider) => switch (provider) {
+    AssetImage(:final assetName) => assetName,
+    ResizeImage(imageProvider: AssetImage(:final assetName)) => assetName,
+    _ => null,
   };
 }

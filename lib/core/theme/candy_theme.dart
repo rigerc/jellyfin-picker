@@ -35,6 +35,7 @@ abstract final class CandyLayout {
 abstract final class CandyIconSize {
   static const hero = 64.0;
   static const status = 48.0;
+  static const action = 32.0;
 }
 
 /// Shared corner-radius values used by the candy collage.
@@ -46,6 +47,7 @@ abstract final class CandyShapes {
 }
 
 abstract final class CandyImages {
+  static const artworkCacheWidth = 256;
   static const posterPreviewNetworkWidth = 48;
   static const posterPreviewQuality = 35;
   static const posterPreviewBlur = 20;
