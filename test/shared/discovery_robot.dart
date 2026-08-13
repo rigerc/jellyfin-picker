@@ -202,6 +202,16 @@ final class DiscoveryRobot {
     expect(find.textContaining('Ava Actor'), findsWidgets);
   }
 
+  void expectDetailsSheetNotFullHeight() {
+    final viewportHeight =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+
+    expect(
+      tester.getSize(find.byType(BottomSheet)).height,
+      lessThan(viewportHeight - CandySpacing.page),
+    );
+  }
+
   void expectNoLayoutException() {
     expect(tester.takeException(), isNull);
   }

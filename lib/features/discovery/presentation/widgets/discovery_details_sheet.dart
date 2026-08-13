@@ -10,6 +10,9 @@ Future<void> showDiscoveryDetails(
 ) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
+  constraints: BoxConstraints(
+    maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+  ),
   showDragHandle: true,
   builder: (context) => DiscoveryDetailsSheet(candidate: candidate),
 );
@@ -33,6 +36,7 @@ final class DiscoveryDetailsSheet extends StatelessWidget {
     return SafeArea(
       child: ListView(
         key: WidgetKeys.discoveryDetails,
+        shrinkWrap: true,
         padding: const EdgeInsets.all(CandySpacing.page),
         children: <Widget>[
           Text(
