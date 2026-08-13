@@ -19,6 +19,32 @@ final class DiscoveryRobot {
     expect(find.byKey(WidgetKeys.discoveryGrid), findsOneWidget);
   }
 
+  void expectGridReachesUsableBottom({required double bottomInset}) {
+    final viewportHeight =
+        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+    final expectedBottom = viewportHeight - bottomInset - CandySpacing.page;
+    final gridBottom = tester
+        .getBottomLeft(find.byKey(WidgetKeys.discoveryGrid))
+        .dy;
+
+    expect(gridBottom, closeTo(expectedBottom, 0.01));
+  }
+
+  Future<void> scrollGridToBottom() async {
+    final position = _gridScrollableState.position;
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
+  }
+
+  void expectGridCandidateVisible(String id) {
+    final gridRect = tester.getRect(find.byKey(WidgetKeys.discoveryGrid));
+    final candidateRect = tester.getRect(
+      find.byKey(WidgetKeys.discoveryCandidate(id)),
+    );
+
+    expect(candidateRect.overlaps(gridRect), isTrue);
+  }
+
   void expectQuickFiltersVisible() {
     expect(find.byKey(WidgetKeys.discoveryRecentFilter), findsOneWidget);
     expect(find.byKey(WidgetKeys.discoveryUnwatchedFilter), findsOneWidget);
@@ -342,6 +368,14 @@ final class DiscoveryRobot {
   }
 
   Finder get _filterScrollable => find.byType(Scrollable).last;
+
+  Finder get _gridScrollable => find.descendant(
+    of: find.byKey(WidgetKeys.discoveryGrid),
+    matching: find.byType(Scrollable),
+  );
+
+  ScrollableState get _gridScrollableState =>
+      tester.state<ScrollableState>(_gridScrollable);
 
   Finder get _detailsScrollable => find.descendant(
     of: find.byKey(WidgetKeys.discoveryDetails),

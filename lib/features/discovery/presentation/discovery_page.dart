@@ -51,6 +51,7 @@ final class _DiscoveryView extends StatelessWidget {
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Scaffold(
       key: WidgetKeys.discoveryPage,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(CandySpacing.page),

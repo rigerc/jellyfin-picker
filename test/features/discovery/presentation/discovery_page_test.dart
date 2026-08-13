@@ -36,6 +36,64 @@ void main() {
     await cubit.close();
   });
 
+  testWidgets(
+    'should fill the usable viewport when the grid has multiple rows',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 808);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final cubit = _cubit();
+      await cubit.replaceCandidates(
+        List<CatalogCandidate>.generate(
+          20,
+          (index) => _candidate(id: 'movie-$index', name: 'Movie $index'),
+        ),
+      );
+      final robot = DiscoveryRobot(tester);
+
+      await _pumpPage(
+        tester,
+        cubit,
+        topInset: CandySpacing.page,
+        bottomInset: CandySpacing.page,
+        bottomViewInset: 120,
+      );
+
+      robot.expectGridReachesUsableBottom(bottomInset: CandySpacing.page);
+      await cubit.close();
+    },
+  );
+
+  testWidgets('should reach the final row when the tall-phone grid scrolls', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 808);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final cubit = _cubit();
+    await cubit.replaceCandidates(
+      List<CatalogCandidate>.generate(
+        20,
+        (index) => _candidate(id: 'movie-$index', name: 'Movie $index'),
+      ),
+    );
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(
+      tester,
+      cubit,
+      topInset: CandySpacing.page,
+      bottomInset: CandySpacing.page,
+      bottomViewInset: 120,
+    );
+    await robot.scrollGridToBottom();
+
+    robot.expectGridCandidateVisible('movie-19');
+    await cubit.close();
+  });
+
   testWidgets('should show balanced localized details when a title opens', (
     tester,
   ) async {
@@ -437,7 +495,9 @@ Future<void> _pumpPage(
   TextScaler textScaler = TextScaler.noScaling,
   bool disableAnimations = false,
   Brightness brightness = Brightness.light,
+  double topInset = 0,
   double bottomInset = 0,
+  double bottomViewInset = 0,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
@@ -448,8 +508,9 @@ Future<void> _pumpPage(
         data: MediaQuery.of(context).copyWith(
           textScaler: textScaler,
           disableAnimations: disableAnimations,
-          padding: EdgeInsets.only(bottom: bottomInset),
-          viewPadding: EdgeInsets.only(bottom: bottomInset),
+          padding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+          viewPadding: EdgeInsets.only(top: topInset, bottom: bottomInset),
+          viewInsets: EdgeInsets.only(bottom: bottomViewInset),
         ),
         child: child ?? const SizedBox.shrink(),
       ),
@@ -481,11 +542,13 @@ final class _ImmediateDiscoveryStore implements DiscoveryStore {
 }
 
 CatalogCandidate _candidate({
+  String id = 'movie-1',
+  String name = 'Candy Comet',
   CatalogImage? poster,
   String overview = 'A warm mystery in space.',
 }) => CatalogCandidate(
-  id: 'movie-1',
-  name: 'Candy Comet',
+  id: id,
+  name: name,
   mediaType: CatalogMediaType.movie,
   year: 2024,
   runtimeMinutes: 112,
