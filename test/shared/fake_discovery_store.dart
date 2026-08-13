@@ -34,6 +34,21 @@ final class FakeDiscoveryStore implements DiscoveryStore {
   }
 }
 
+final class ImmediateDiscoveryStore implements DiscoveryStore {
+  DiscoverySnapshot? snapshot;
+
+  @override
+  Future<void> clear(String scope) async => snapshot = null;
+
+  @override
+  Future<DiscoverySnapshot?> read(String scope) async => snapshot;
+
+  @override
+  Future<void> write(String scope, DiscoverySnapshot value) async {
+    snapshot = value;
+  }
+}
+
 final class ControlledDiscoveryStore implements DiscoveryStore {
   final readCompleter = Completer<DiscoverySnapshot?>();
   final clearCompleter = Completer<void>();
