@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.7 — 2026-08-13
+
+- Remove the remaining empty space below title details, including on devices
+  with a bottom system inset.
+
 ## 1.0.6 — 2026-08-13
 
 - Prevent the title details sheet from covering the lower part of the screen
