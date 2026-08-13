@@ -47,7 +47,49 @@ void main() {
     await robot.openFirstDetails();
 
     robot.expectDetailsVisible();
-    robot.expectDetailsSheetNotFullHeight();
+    robot.expectNoBlankAreaBelowDetails();
+    await cubit.close();
+  });
+
+  testWidgets(
+    'should avoid blank details space with a bottom inset in dark mode',
+    (tester) async {
+      final cubit = _cubit();
+      await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+      final robot = DiscoveryRobot(tester);
+
+      await _pumpPage(
+        tester,
+        cubit,
+        brightness: Brightness.dark,
+        bottomInset: CandySpacing.page,
+      );
+      await robot.openFirstDetails();
+
+      robot.expectNoBlankAreaBelowDetails(bottomInset: CandySpacing.page);
+      await cubit.close();
+    },
+  );
+
+  testWidgets('should keep long details scrollable on a small phone', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[
+      _candidate(overview: List<String>.filled(20, 'Long synopsis.').join(' ')),
+    ]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+    await robot.openFirstDetails();
+
+    robot.expectDetailsScrollable();
+    await robot.scrollDetailsToBottom();
+    robot.expectNoBlankAreaBelowDetails();
     await cubit.close();
   });
 
@@ -394,16 +436,20 @@ Future<void> _pumpPage(
   Future<bool> Function(CatalogCandidate candidate)? onToggleFavorite,
   TextScaler textScaler = TextScaler.noScaling,
   bool disableAnimations = false,
+  Brightness brightness = Brightness.light,
+  double bottomInset = 0,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
-      theme: buildCandyTheme(),
+      theme: buildCandyTheme(brightness: brightness),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       builder: (context, child) => MediaQuery(
         data: MediaQuery.of(context).copyWith(
           textScaler: textScaler,
           disableAnimations: disableAnimations,
+          padding: EdgeInsets.only(bottom: bottomInset),
+          viewPadding: EdgeInsets.only(bottom: bottomInset),
         ),
         child: child ?? const SizedBox.shrink(),
       ),
@@ -434,7 +480,10 @@ final class _ImmediateDiscoveryStore implements DiscoveryStore {
   }
 }
 
-CatalogCandidate _candidate({CatalogImage? poster}) => CatalogCandidate(
+CatalogCandidate _candidate({
+  CatalogImage? poster,
+  String overview = 'A warm mystery in space.',
+}) => CatalogCandidate(
   id: 'movie-1',
   name: 'Candy Comet',
   mediaType: CatalogMediaType.movie,
@@ -445,7 +494,7 @@ CatalogCandidate _candidate({CatalogImage? poster}) => CatalogCandidate(
   criticRating: 91,
   officialRating: 'PG-13',
   status: 'Returning Series',
-  overview: 'A warm mystery in space.',
+  overview: overview,
   cast: const <String>['Ava Actor', 'Sam Star'],
   watched: false,
   favorite: false,

@@ -202,14 +202,26 @@ final class DiscoveryRobot {
     expect(find.textContaining('Ava Actor'), findsWidgets);
   }
 
-  void expectDetailsSheetNotFullHeight() {
-    final viewportHeight =
-        tester.view.physicalSize.height / tester.view.devicePixelRatio;
+  void expectNoBlankAreaBelowDetails({double bottomInset = 0}) {
+    final sheetBottom = tester.getBottomLeft(find.byType(BottomSheet)).dy;
+    final detailsBottom = tester
+        .getBottomLeft(find.textContaining('Ava Actor').last)
+        .dy;
 
     expect(
-      tester.getSize(find.byType(BottomSheet)).height,
-      lessThan(viewportHeight - CandySpacing.page),
+      sheetBottom - detailsBottom,
+      lessThanOrEqualTo(CandySpacing.compact + bottomInset),
     );
+  }
+
+  void expectDetailsScrollable() {
+    expect(_detailsScrollableState.position.maxScrollExtent, greaterThan(0));
+  }
+
+  Future<void> scrollDetailsToBottom() async {
+    final position = _detailsScrollableState.position;
+    position.jumpTo(position.maxScrollExtent);
+    await tester.pump();
   }
 
   void expectNoLayoutException() {
@@ -330,6 +342,14 @@ final class DiscoveryRobot {
   }
 
   Finder get _filterScrollable => find.byType(Scrollable).last;
+
+  Finder get _detailsScrollable => find.descendant(
+    of: find.byKey(WidgetKeys.discoveryDetails),
+    matching: find.byType(Scrollable),
+  );
+
+  ScrollableState get _detailsScrollableState =>
+      tester.state<ScrollableState>(_detailsScrollable);
 
   NetworkImage _networkImageFor(ImageProvider provider) => switch (provider) {
     ResizeImage(:final imageProvider) => imageProvider as NetworkImage,
