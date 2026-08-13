@@ -97,6 +97,70 @@ void main() {
       ]),
     );
   });
+
+  test('should restore a stored session after a transient null read', () async {
+    final store = FlakyReadKeyValueStore(flakyKey: 'connection.access_token')
+      ..writes['connection.server_url'] = 'https://example.test'
+      ..writes['connection.access_token'] = 'token'
+      ..writes['connection.user_id'] = 'id'
+      ..writes['connection.username'] = 'alice'
+      ..writes['connection.device_id'] = 'device';
+
+    final session = await FlutterSecureSessionStore(store).readSession();
+
+    expect(session?.accessToken, 'token');
+    expect(session?.deviceId, 'device');
+  });
+
+  test('should restore a session when a field flakes repeatedly', () async {
+    final store =
+        FlakyReadKeyValueStore(
+            flakyKey: 'connection.server_url',
+            nullsBeforeValue: 2,
+          )
+          ..writes['connection.server_url'] = 'https://example.test'
+          ..writes['connection.access_token'] = 'token'
+          ..writes['connection.user_id'] = 'id'
+          ..writes['connection.username'] = 'alice'
+          ..writes['connection.device_id'] = 'device';
+
+    final session = await FlutterSecureSessionStore(store).readSession();
+
+    expect(session?.serverUrl, 'https://example.test');
+  });
+
+  test(
+    'should reuse a persisted device id after a transient null read',
+    () async {
+      final store = FlakyReadKeyValueStore(flakyKey: 'connection.device_id')
+        ..writes['connection.device_id'] = 'stable-device';
+
+      final provider = SecureDeviceIdProvider(store);
+
+      expect(await provider.loadOrCreate(), 'stable-device');
+      expect(store.writes, {'connection.device_id': 'stable-device'});
+    },
+  );
+
+  test('should generate and reuse one stable device id', () async {
+    final store = FlakyReadKeyValueStore(flakyKey: 'connection.device_id');
+    final provider = SecureDeviceIdProvider(store);
+
+    final first = await provider.loadOrCreate();
+    final second = await provider.loadOrCreate();
+
+    expect(first, isNotEmpty);
+    expect(second, first);
+    expect(store.writes, hasLength(1));
+    expect(store.writes['connection.device_id'], first);
+  });
+
+  test('should surface persistent storage failures during restore', () async {
+    await expectLater(
+      FlutterSecureSessionStore(ThrowingKeyValueStore()).readSession(),
+      throwsA(isA<StateError>()),
+    );
+  });
 }
 
 StoredSession _session() => const StoredSession(
@@ -127,4 +191,44 @@ final class RecordingKeyValueStore implements SecureKeyValueStore {
       throw StateError('write failed');
     }
   }
+}
+
+final class FlakyReadKeyValueStore implements SecureKeyValueStore {
+  FlakyReadKeyValueStore({required this.flakyKey, this.nullsBeforeValue = 1});
+
+  final String flakyKey;
+  final int nullsBeforeValue;
+  final writes = <String, String>{};
+  final deletes = <String>[];
+  var _missed = 0;
+
+  @override
+  Future<void> delete(String key) async => deletes.add(key);
+
+  @override
+  Future<String?> read(String key) async {
+    if (key == flakyKey && _missed < nullsBeforeValue) {
+      _missed++;
+      return null;
+    }
+    return writes[key];
+  }
+
+  @override
+  Future<void> write(String key, String value) async {
+    writes[key] = value;
+  }
+}
+
+final class ThrowingKeyValueStore implements SecureKeyValueStore {
+  @override
+  Future<void> delete(String key) async {}
+
+  @override
+  Future<String?> read(String key) async {
+    throw StateError('keystore locked');
+  }
+
+  @override
+  Future<void> write(String key, String value) async {}
 }

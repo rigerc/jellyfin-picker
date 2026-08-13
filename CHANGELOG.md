@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.5 — 2026-08-13
+
+- Keep the saved session available when Jellyfin rejects an expired token so
+  re-authentication can recover without losing the connection state.
+- Retry transient secure-storage reads to preserve saved sessions and stable
+  device identity across keychain or keystore misses.
+
 ## 1.0.4 — 2026-08-12
 
 - Sort discovery by recently added, or filter to titles added within 7, 30, 90,

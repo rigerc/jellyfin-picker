@@ -19,13 +19,13 @@ final class FlutterSecureSessionStore implements SessionStore {
   @override
   Future<StoredSession?> readSession() async {
     final values = await Future.wait(<Future<String?>>[
-      storage.read(_serverUrlKey),
-      storage.read(_accessTokenKey),
-      storage.read(_userIdKey),
-      storage.read(_usernameKey),
-      storage.read(_deviceIdKey),
-      storage.read(_serverNameKey),
-      storage.read(_serverVersionKey),
+      _readResilient(storage, _serverUrlKey),
+      _readResilient(storage, _accessTokenKey),
+      _readResilient(storage, _userIdKey),
+      _readResilient(storage, _usernameKey),
+      _readResilient(storage, _deviceIdKey),
+      _readResilient(storage, _serverNameKey),
+      _readResilient(storage, _serverVersionKey),
     ]);
     final serverUrl = values[0];
     final accessToken = values[1];
@@ -103,14 +103,43 @@ final class SecureDeviceIdProvider implements DeviceIdProvider {
 
   @override
   Future<String> loadOrCreate() async {
-    final existing = await storage.read(_deviceIdKey);
-    if (existing != null && existing.isNotEmpty) {
+    final existing = await _readResilient(storage, _deviceIdKey);
+    if (existing != null) {
       return existing;
     }
     final generated = DateTime.now().microsecondsSinceEpoch.toRadixString(16);
     await storage.write(_deviceIdKey, generated);
     return generated;
   }
+}
+
+/// Reads a secure value while absorbing transient keychain/keystore misses.
+Future<String?> _readResilient(
+  SecureKeyValueStore storage,
+  String key, {
+  int attempts = 3,
+  Duration delay = const Duration(milliseconds: 50),
+}) async {
+  Object? lastError;
+  var sawCleanResult = false;
+  for (var attempt = 0; attempt < attempts; attempt++) {
+    try {
+      final value = await storage.read(key);
+      sawCleanResult = true;
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    } on Object catch (error) {
+      lastError = error;
+    }
+    if (attempt + 1 < attempts) {
+      await Future<void>.delayed(delay);
+    }
+  }
+  if (!sawCleanResult && lastError != null) {
+    Error.throwWithStackTrace(lastError, StackTrace.current);
+  }
+  return null;
 }
 
 final class FlutterSecureKeyValueStore implements SecureKeyValueStore {

@@ -121,7 +121,6 @@ final class JellyfinConnectionRepository implements ConnectionRepository {
         headers: _headers(session.deviceId, token: session.accessToken),
       );
       if (response.statusCode == 401 || response.statusCode == 403) {
-        await _clearExpiredSession(session, baseUrl);
         return const SessionRestoreFailure(ExpiredSessionFailure());
       }
       _parseServerInfo(response);
@@ -179,25 +178,6 @@ final class JellyfinConnectionRepository implements ConnectionRepository {
       return const LogoutStorageFailureResult(StorageFailure());
     }
     return LogoutCompleted(remoteSucceeded: remoteSucceeded);
-  }
-
-  Future<void> _clearExpiredSession(StoredSession session, Uri baseUrl) async {
-    try {
-      await _send(
-        'POST',
-        _endpoint(baseUrl, 'Sessions/Logout'),
-        headers: _headers(session.deviceId, token: session.accessToken),
-      );
-    } on Object catch (_) {
-      // The local clear in finally is the security boundary; remote logout is
-      // best effort because the token has already been rejected.
-    } finally {
-      try {
-        await sessionStore.clearSession();
-      } on Object catch (_) {
-        throw const StorageFailure();
-      }
-    }
   }
 
   ServerInfo _parseServerInfo(http.Response response) {
