@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   validate:
-    name: Validate Jellyfin Picker
+    name: Validate Jellyfilter
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

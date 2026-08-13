@@ -18,7 +18,7 @@ void main() {
     deviceIdProvider: SecureDeviceIdProvider(keyValueStore),
   );
   runApp(
-    JellyfinPickerApp(
+    JellyfilterApp(
       router: buildAppRouter(
         connectionRepository: repository,
         authenticatedBuilder: (context, session) => DiscoverySessionPage(

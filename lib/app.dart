@@ -60,18 +60,18 @@ GoRouter buildAppRouter({
   );
 }
 
-/// Root widget for the Jellyfin Picker application.
-final class JellyfinPickerApp extends StatefulWidget {
-  const JellyfinPickerApp({required this.router, this.onDispose, super.key});
+/// Root widget for the Jellyfilter application.
+final class JellyfilterApp extends StatefulWidget {
+  const JellyfilterApp({required this.router, this.onDispose, super.key});
 
   final GoRouter router;
   final FutureOr<void> Function()? onDispose;
 
   @override
-  State<JellyfinPickerApp> createState() => _JellyfinPickerAppState();
+  State<JellyfilterApp> createState() => _JellyfilterAppState();
 }
 
-final class _JellyfinPickerAppState extends State<JellyfinPickerApp> {
+final class _JellyfilterAppState extends State<JellyfilterApp> {
   @override
   void dispose() {
     widget.onDispose?.call();

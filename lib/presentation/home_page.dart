@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jellyfin_picker/core/assets/app_assets.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/l10n/generated/app_localizations.dart';
@@ -28,11 +29,17 @@ final class HomePage extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     spacing: CandySpacing.compact,
                     children: <Widget>[
-                      ExcludeSemantics(
-                        child: Icon(
-                          Icons.movie_filter_rounded,
-                          size: CandyIconSize.hero,
-                          color: theme.colorScheme.primary,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(CandyShapes.card),
+                        child: ExcludeSemantics(
+                          child: Image.asset(
+                            AppAssets.appIcon,
+                            width: CandyIconSize.hero,
+                            height: CandyIconSize.hero,
+                            cacheWidth: CandyImages.artworkCacheWidth,
+                            fit: BoxFit.cover,
+                            filterQuality: FilterQuality.high,
+                          ),
                         ),
                       ),
                       Text(

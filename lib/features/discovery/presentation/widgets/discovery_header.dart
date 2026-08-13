@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jellyfin_picker/core/assets/app_assets.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_filter.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
@@ -36,16 +37,16 @@ final class DiscoveryHeader extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                SizedBox.square(
-                  dimension: CandySpacing.minimumTouchTarget,
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: colorScheme.secondaryContainer,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.theaters_rounded,
-                      color: colorScheme.onSecondaryContainer,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(CandyShapes.card),
+                  child: ExcludeSemantics(
+                    child: Image.asset(
+                      AppAssets.appIcon,
+                      width: CandySpacing.minimumTouchTarget,
+                      height: CandySpacing.minimumTouchTarget,
+                      cacheWidth: CandyImages.artworkCacheWidth,
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.high,
                     ),
                   ),
                 ),
@@ -185,7 +186,19 @@ final class _DiscoveryActions extends StatelessWidget {
           key: WidgetKeys.discoveryFilterButton,
           tooltip: localization.discoveryFiltersLabel,
           onPressed: onOpenFilters,
-          icon: const Icon(Icons.tune_rounded),
+          icon: ClipRRect(
+            borderRadius: BorderRadius.circular(CandyShapes.poster),
+            child: ExcludeSemantics(
+              child: Image.asset(
+                AppAssets.filterIcon,
+                width: CandyIconSize.action,
+                height: CandyIconSize.action,
+                cacheWidth: CandyImages.artworkCacheWidth,
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
+              ),
+            ),
+          ),
         ),
         IconButton(
           key: WidgetKeys.discoveryClearButton,

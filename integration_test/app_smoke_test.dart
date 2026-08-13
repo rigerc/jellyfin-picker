@@ -9,7 +9,6 @@ import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_sna
 import 'package:jellyfin_picker/features/discovery/domain/repositories/discovery_store.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/discovery_page.dart';
 
-import '../test/shared/connection_robot.dart';
 import '../test/shared/discovery_robot.dart';
 import '../test/shared/fake_connection_repository.dart';
 import '../test/shared/fake_discovery_store.dart';
@@ -33,13 +32,10 @@ void main() {
       authenticatedBuilder: (context, session) =>
           DiscoveryPage(cubit: discoveryCubit),
     );
-    final connection = ConnectionRobot(tester);
     final discovery = DiscoveryRobot(tester);
 
-    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
-    connection.expectSummaryVisible();
-    await connection.tapExplore();
     discovery.expectPeerModesVisible();
     discovery.expectGridVisible();
     await discovery.openSwipe();
@@ -68,12 +64,10 @@ void main() {
       authenticatedBuilder: (context, session) =>
           DiscoveryPage(cubit: discoveryCubit),
     );
-    final connection = ConnectionRobot(tester);
     final discovery = DiscoveryRobot(tester);
 
-    await tester.pumpWidget(JellyfinPickerApp(router: router));
+    await tester.pumpWidget(JellyfilterApp(router: router));
     await tester.pumpAndSettle();
-    await connection.tapExplore();
     discovery.expectQuickFiltersVisible();
     await discovery.tapRecentThirtyDays();
     discovery.expectFiltersActive();

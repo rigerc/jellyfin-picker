@@ -48,7 +48,7 @@ final class _ConnectionFormState extends State<_ConnectionForm> {
   @override
   void initState() {
     super.initState();
-    unawaited(context.read<ConnectionCubit>().restore());
+    unawaited(_restore());
   }
 
   @override
@@ -57,6 +57,17 @@ final class _ConnectionFormState extends State<_ConnectionForm> {
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _restore() async {
+    final cubit = context.read<ConnectionCubit>();
+    await cubit.restore();
+    if (!mounted) {
+      return;
+    }
+    if (cubit.state case ConnectionAuthenticated(:final session)) {
+      widget.onExplore?.call(session);
+    }
   }
 
   @override

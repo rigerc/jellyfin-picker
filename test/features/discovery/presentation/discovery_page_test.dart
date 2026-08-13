@@ -308,6 +308,20 @@ void main() {
     await cubit.close();
   });
 
+  testWidgets('should show supplied search artwork in the filter sheet', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+    await robot.openFilters();
+
+    robot.expectSearchArtworkVisible();
+    await cubit.close();
+  });
+
   testWidgets('should preserve restored maximum ratings when reapplied', (
     tester,
   ) async {
