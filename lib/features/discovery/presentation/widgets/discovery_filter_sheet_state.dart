@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_filter.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_facets.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_library.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_form.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_sections.dart';
@@ -10,11 +12,15 @@ final class DiscoveryFilterSheet extends StatefulWidget {
   const DiscoveryFilterSheet({
     required this.filter,
     this.candidates = const <CatalogCandidate>[],
+    this.libraries = const <CatalogLibrary>[],
+    this.facets = const CatalogFacets(),
     super.key,
   });
 
   final CatalogFilter filter;
   final Iterable<CatalogCandidate> candidates;
+  final List<CatalogLibrary> libraries;
+  final CatalogFacets facets;
 
   @override
   State<DiscoveryFilterSheet> createState() => _DiscoveryFilterSheetState();
@@ -25,11 +31,10 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
   final _search = TextEditingController();
   final _genresText = TextEditingController();
   final _presetText = TextEditingController();
-  late Set<CatalogMediaType> _mediaTypes;
+  late String? _libraryId;
   late Set<String> _genres;
   late Set<int> _decades;
   late Set<String> _ratings;
-  late Set<CatalogSeriesStatus> _statuses;
   late RangeValues _runtime;
   late double _community;
   late double _critic;
@@ -46,11 +51,13 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
     _candidateList = List<CatalogCandidate>.unmodifiable(widget.candidates);
     _search.text = filter.searchTerm;
     _genresText.text = filter.genres.join(', ');
-    _mediaTypes = filter.mediaTypes.toSet();
+    _libraryId =
+        widget.libraries.any((library) => library.id == filter.libraryId)
+        ? filter.libraryId
+        : null;
     _genres = filter.genres.toSet();
     _decades = filter.decades.toSet();
     _ratings = filter.officialRatings.toSet();
-    _statuses = filter.seriesStatuses.toSet();
     _runtime = RangeValues(
       (filter.minimumRuntimeMinutes ?? 0).toDouble(),
       (filter.maximumRuntimeMinutes ?? _maxRuntime).toDouble(),
@@ -95,12 +102,14 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
       ),
       query: (
         searchController: _search,
+        libraries: widget.libraries,
+        libraryId: _libraryId,
         sort: _sort,
         addedWithin: _addedWithin,
         onSortChanged: (value) => setState(() => _sort = value),
+        onLibraryChanged: (value) => setState(() => _libraryId = value),
         onAddedWithinChanged: (value) => setState(() => _addedWithin = value),
       ),
-      mediaTypes: (selected: _mediaTypes, onChanged: _toggleMediaType),
       ratings: (
         runtime: _runtime,
         community: _community,
@@ -114,17 +123,14 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
         genres: _genres,
         decades: _decades,
         officialRatings: _ratings,
-        seriesStatuses: _statuses,
         watched: _watched,
         favorite: _favorite,
         availableGenres: _genresFromCandidates,
         availableDecades: _decadesFromCandidates,
         availableRatings: _ratingsFromCandidates,
-        availableStatuses: _statusesFromCandidates,
         onGenreChanged: _toggleGenre,
         onDecadeChanged: _toggleDecade,
         onOfficialRatingChanged: _toggleRating,
-        onSeriesStatusChanged: _toggleStatus,
         onWatchedChanged: (value) => setState(() => _watched = value),
         onFavoriteChanged: (value) => setState(() => _favorite = value),
       ),
@@ -140,17 +146,20 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
   }
 
   List<String> get _genresFromCandidates =>
-      _candidateList
-          .expand((candidate) => candidate.genres)
+      (widget.facets.genres.isEmpty
+              ? _candidateList.expand((candidate) => candidate.genres)
+              : widget.facets.genres)
           .followedBy(_genres)
           .toSet()
           .toList()
         ..sort();
 
   List<int> get _decadesFromCandidates =>
-      _candidateList
-          .map((candidate) => candidate.year)
-          .whereType<int>()
+      (widget.facets.years.isEmpty
+              ? _candidateList
+                    .map((candidate) => candidate.year)
+                    .whereType<int>()
+              : widget.facets.years)
           .map((year) => (year ~/ 10) * 10)
           .followedBy(_decades)
           .toSet()
@@ -158,28 +167,15 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
         ..sort();
 
   List<String> get _ratingsFromCandidates =>
-      _candidateList
-          .map((candidate) => candidate.officialRating)
-          .whereType<String>()
+      (widget.facets.officialRatings.isEmpty
+              ? _candidateList
+                    .map((candidate) => candidate.officialRating)
+                    .whereType<String>()
+              : widget.facets.officialRatings)
           .followedBy(_ratings)
           .toSet()
           .toList()
         ..sort();
-
-  List<CatalogSeriesStatus> get _statusesFromCandidates => CatalogSeriesStatus
-      .values
-      .where(
-        (status) =>
-            _statuses.contains(status) ||
-            _candidateList.any(
-              (candidate) => _matchesStatus(status, candidate.status),
-            ),
-      )
-      .toList(growable: false);
-
-  void _toggleMediaType(CatalogMediaType type, bool selected) => setState(
-    () => selected ? _mediaTypes.add(type) : _mediaTypes.remove(type),
-  );
 
   void _toggleGenre(String genre, bool selected) =>
       setState(() => selected ? _genres.add(genre) : _genres.remove(genre));
@@ -189,10 +185,6 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
 
   void _toggleRating(String rating, bool selected) =>
       setState(() => selected ? _ratings.add(rating) : _ratings.remove(rating));
-
-  void _toggleStatus(CatalogSeriesStatus status, bool selected) => setState(
-    () => selected ? _statuses.add(status) : _statuses.remove(status),
-  );
 
   Future<void> _apply() async {
     final genres = _genres.isNotEmpty
@@ -204,10 +196,10 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
               .toSet();
     await context.read<DiscoveryCubit>().updateFilter(
       CatalogFilter(
+        libraryId: _libraryId,
         searchTerm: _search.text.trim(),
         addedWithin: _addedWithin,
         sort: _sort,
-        mediaTypes: _mediaTypes,
         minimumRuntimeMinutes: _runtime.start == 0
             ? null
             : _runtime.start.round(),
@@ -221,7 +213,6 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
         genres: genres,
         decades: _decades,
         officialRatings: _ratings,
-        seriesStatuses: _statuses,
         watched: _bool(_watched),
         favorite: _bool(_favorite),
       ),
@@ -257,11 +248,4 @@ final class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
     DiscoveryTriState.yes => true,
     DiscoveryTriState.no => false,
   };
-
-  static bool _matchesStatus(CatalogSeriesStatus status, String? value) {
-    final normalized = value?.toLowerCase() ?? '';
-    return status == CatalogSeriesStatus.continuing
-        ? normalized.contains('returning') || normalized.contains('continuing')
-        : normalized.contains('ended') || normalized.contains('cancel');
-  }
 }

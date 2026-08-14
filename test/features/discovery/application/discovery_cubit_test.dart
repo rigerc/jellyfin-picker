@@ -190,19 +190,14 @@ void main() {
     },
   );
 
-  test('should recompute eligibility when the active filter changes', () async {
+  test('should keep series out of movie discovery eligibility', () async {
     final cubit = _cubit(FakeDiscoverySelector(null));
     await cubit.replaceCandidates(<CatalogCandidate>[
       _candidate('movie-1'),
       _candidate('series-1', type: CatalogMediaType.series),
     ]);
-    await cubit.updateFilter(
-      const CatalogFilter(
-        mediaTypes: <CatalogMediaType>{CatalogMediaType.series},
-      ),
-    );
 
-    expect(cubit.state.eligibleCandidates.single.id, 'series-1');
+    expect(cubit.state.eligibleCandidates.single.id, 'movie-1');
     await cubit.close();
   });
 
@@ -392,7 +387,6 @@ void main() {
         addedWithin: CatalogAddedWindow.ninetyDays,
         sort: CatalogSort.recentlyAdded,
         officialRatings: <String>{'PG-13'},
-        seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.ended},
         watched: true,
       ),
     );
@@ -413,9 +407,7 @@ void main() {
     expect(second.state.filter.addedWithin, CatalogAddedWindow.ninetyDays);
     expect(second.state.filter.sort, CatalogSort.recentlyAdded);
     expect(second.state.filter.officialRatings, <String>{'PG-13'});
-    expect(second.state.filter.seriesStatuses, <CatalogSeriesStatus>{
-      CatalogSeriesStatus.ended,
-    });
+    expect(second.state.filter.seriesStatuses, isEmpty);
     expect(second.state.filter.dateWindowAnchor, restoredAnchor);
     expect(second.state.likedIds, contains('movie-1'));
     expect(second.state.mode, DiscoveryMode.swipe);

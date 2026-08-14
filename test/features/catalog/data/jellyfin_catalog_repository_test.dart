@@ -6,11 +6,342 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:jellyfin_picker/features/catalog/data/jellyfin_catalog_repository.dart';
 import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_candidate.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_facets.dart';
 import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_filter.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_library.dart';
 import 'package:jellyfin_picker/features/catalog/domain/failures/catalog_failure.dart';
 import '../../../shared/recording_http_client.dart';
 
 void main() {
+  test(
+    'should load one bounded Jellyfin suggestion page for recommended discovery',
+    () async {
+      final client = RecordingHttpClient(
+        (request) async => _jsonResponse({
+          'Items': <Map<String, Object?>>[_movieJson()],
+          'StartIndex': 0,
+          'TotalRecordCount': 2000,
+        }),
+      );
+      final repository = JellyfinCatalogRepository(
+        client: client,
+        serverUrl: 'https://example.test/jellyfin',
+        accessToken: 'token',
+        deviceId: 'device',
+        userId: 'user-id',
+      );
+
+      final page = await repository.loadPage();
+
+      expect(page.candidates.single.name, 'Candy Movie');
+      expect(page.hasMore, isTrue);
+      expect(client.requests, hasLength(1));
+      expect(client.requests.single.url.path, '/jellyfin/Items/Suggestions');
+      expect(
+        client.requests.single.url.queryParameters,
+        containsPair('type', 'Movie'),
+      );
+    },
+  );
+
+  test(
+    'should load one scoped random batch while excluding recent decisions',
+    () async {
+      final client = RecordingHttpClient(
+        (request) async => _jsonResponse({
+          'Items': <Map<String, Object?>>[_movieJson()],
+          'StartIndex': 0,
+          'TotalRecordCount': 2000,
+        }),
+      );
+      final repository = JellyfinCatalogRepository(
+        client: client,
+        serverUrl: 'https://example.test',
+        accessToken: 'token',
+        deviceId: 'device',
+        userId: 'user-id',
+      );
+      final filter = const CatalogFilter().copyWith(
+        sort: CatalogSort.random,
+        libraryId: 'library-id',
+      );
+
+      final page = await repository.loadPage(
+        filter: filter,
+        excludedIds: const <String>{'seen-2', 'seen-1'},
+      );
+
+      expect(page.candidates, hasLength(1));
+      expect(client.requests, hasLength(1));
+      expect(client.requests.single.url.path, '/Items');
+      expect(
+        client.requests.single.url.queryParameters,
+        containsPair('sortBy', 'Random'),
+      );
+      expect(
+        client.requests.single.url.queryParameters,
+        containsPair('parentId', 'library-id'),
+      );
+      expect(
+        client.requests.single.url.queryParameters,
+        containsPair('excludeItemIds', 'seen-1,seen-2'),
+      );
+    },
+  );
+
+  test('should load a bounded local shortlist by Jellyfin item id', () async {
+    final client = RecordingHttpClient(
+      (request) async => _jsonResponse({
+        'Items': <Map<String, Object?>>[_movieJson()],
+        'StartIndex': 0,
+        'TotalRecordCount': 1,
+      }),
+    );
+    final repository = JellyfinCatalogRepository(
+      client: client,
+      serverUrl: 'https://example.test',
+      accessToken: 'token',
+      deviceId: 'device',
+      userId: 'user-id',
+    );
+
+    await repository.loadPage(
+      includedIds: const <String>{'liked-2', 'liked-1'},
+    );
+
+    expect(client.requests.single.url.path, '/Items');
+    expect(
+      client.requests.single.url.queryParameters['ids'],
+      'liked-1,liked-2',
+    );
+    expect(client.requests.single.url.queryParameters['limit'], '50');
+  });
+
+  test('should scope a filtered discovery page to its movie library', () async {
+    final client = RecordingHttpClient(
+      (request) async => _jsonResponse({
+        'Items': <Map<String, Object?>>[_movieJson()],
+        'StartIndex': 0,
+        'TotalRecordCount': 1,
+      }),
+    );
+    final repository = JellyfinCatalogRepository(
+      client: client,
+      serverUrl: 'https://example.test',
+      accessToken: 'token',
+      deviceId: 'device',
+      userId: 'user-id',
+    );
+
+    await repository.loadPage(
+      filter: const CatalogFilter(libraryId: 'movies-id'),
+    );
+
+    expect(client.requests.single.url.path, '/Items');
+    expect(client.requests.single.url.queryParameters['parentId'], 'movies-id');
+    expect(
+      client.requests.single.url.queryParameters['includeItemTypes'],
+      'Movie',
+    );
+    expect(
+      client.requests.single.url.queryParameters['sortBy'],
+      'CommunityRating',
+    );
+    expect(
+      client.requests.single.url.queryParameters['sortOrder'],
+      'Descending',
+    );
+  });
+
+  test('should load accessible user libraries from Jellyfin views', () async {
+    final client = RecordingHttpClient(
+      (request) async => _jsonResponse({
+        'Items': <Map<String, Object?>>[
+          <String, Object?>{
+            'Id': 'movies-id',
+            'Name': 'Movies',
+            'CollectionType': 'movies',
+          },
+          <String, Object?>{
+            'Id': 'shows-id',
+            'Name': 'TV Shows',
+            'CollectionType': 'tvshows',
+          },
+        ],
+        'TotalRecordCount': 2,
+      }),
+    );
+    final repository = JellyfinCatalogRepository(
+      client: client,
+      serverUrl: 'https://example.test',
+      accessToken: 'token',
+      deviceId: 'device',
+      userId: 'user-id',
+    );
+
+    final result = await repository.loadLibraries();
+
+    expect(result.value, const <CatalogLibrary>[
+      CatalogLibrary(id: 'movies-id', name: 'Movies', collectionType: 'movies'),
+    ]);
+    expect(result.failure, isNull);
+    expect(client.requests.single.url.path, '/UserViews');
+  });
+
+  test('should combine legacy and current Jellyfin filter facets', () async {
+    final client = RecordingHttpClient((request) async {
+      if (request.url.path == '/Items/Filters') {
+        return _jsonResponse({
+          'Genres': <String>['Drama'],
+          'OfficialRatings': <String>['PG-13'],
+          'Years': <int>[2023],
+          'Tags': <String>['Award Winner'],
+        });
+      }
+      return _jsonResponse({
+        'Genres': <Map<String, Object?>>[
+          <String, Object?>{'Name': 'Comedy', 'Id': 'genre-id'},
+        ],
+        'Tags': <String>['Family'],
+        'AudioLanguages': <Map<String, Object?>>[
+          <String, Object?>{'Name': 'English', 'Value': 'eng'},
+        ],
+        'SubtitleLanguages': <Map<String, Object?>>[
+          <String, Object?>{'Name': 'Dutch', 'Value': 'nld'},
+        ],
+      });
+    });
+    final repository = JellyfinCatalogRepository(
+      client: client,
+      serverUrl: 'https://example.test',
+      accessToken: 'token',
+      deviceId: 'device',
+      userId: 'user-id',
+    );
+
+    final result = await repository.loadFacets(parentId: 'library-id');
+
+    expect(
+      result.value,
+      const CatalogFacets(
+        genres: <String>['Comedy', 'Drama'],
+        years: <int>[2023],
+        officialRatings: <String>['PG-13'],
+        tags: <String>['Award Winner', 'Family'],
+        audioLanguages: <CatalogFacetValue>[
+          CatalogFacetValue(name: 'English', value: 'eng'),
+        ],
+        subtitleLanguages: <CatalogFacetValue>[
+          CatalogFacetValue(name: 'Dutch', value: 'nld'),
+        ],
+      ),
+    );
+    expect(result.failure, isNull);
+    expect(client.requests, hasLength(2));
+    expect(
+      client.requests.map((request) => request.url.path),
+      containsAll(<String>['/Items/Filters', '/Items/Filters2']),
+    );
+    expect(
+      client.requests.every(
+        (request) => request.url.queryParameters['parentId'] == 'library-id',
+      ),
+      isTrue,
+    );
+    expect(
+      client.requests.every(
+        (request) => request.url.queryParameters['includeItemTypes'] == 'Movie',
+      ),
+      isTrue,
+    );
+  });
+
+  test('should lazily load full details for one Jellyfin item', () async {
+    final client = RecordingHttpClient(
+      (request) async => _jsonResponse(<String, Object?>{
+        ..._movieJson(),
+        'Overview': 'A richer synopsis.',
+        'People': <Map<String, Object?>>[
+          <String, Object?>{'Name': 'Actor One', 'Type': 'Actor'},
+        ],
+      }),
+    );
+    final repository = JellyfinCatalogRepository(
+      client: client,
+      serverUrl: 'https://example.test/jellyfin',
+      accessToken: 'token',
+      deviceId: 'device',
+      userId: 'user-id',
+    );
+
+    final result = await repository.loadDetails('movie-1');
+
+    expect(result.value?.overview, 'A richer synopsis.');
+    expect(result.value?.cast, <String>['Actor One']);
+    expect(result.failure, isNull);
+    expect(client.requests.single.url.path, '/jellyfin/Items/movie-1');
+  });
+
+  test('should type failures from discovery support endpoints', () async {
+    JellyfinCatalogRepository repository(http.Client client) =>
+        JellyfinCatalogRepository(
+          client: client,
+          serverUrl: 'https://example.test',
+          accessToken: 'token',
+          deviceId: 'device',
+          userId: 'user-id',
+        );
+    final unauthorized = RecordingHttpClient(
+      (request) async => http.Response('', 401),
+    );
+    final malformed = RecordingHttpClient(
+      (request) async => _jsonResponse(<String, Object?>{'Type': 'Series'}),
+    );
+
+    final libraries = await repository(unauthorized).loadLibraries();
+    final details = await repository(malformed).loadDetails('series-id');
+
+    expect(libraries.failure, isA<ExpiredCatalogFailure>());
+    expect(details.failure, isA<IncompatibleCatalogFailure>());
+  });
+
+  test(
+    'should map Jellyfin image aspect ratio and blurhash metadata',
+    () async {
+      final repository = JellyfinCatalogRepository(
+        client: RecordingHttpClient(
+          (request) async => _jsonResponse({
+            'Items': <Map<String, Object?>>[
+              <String, Object?>{
+                ..._movieJson(),
+                'PrimaryImageAspectRatio': 0.71,
+                'ImageBlurHashes': <String, Object?>{
+                  'Primary': <String, String>{'primary-tag': 'poster-blurhash'},
+                  'Backdrop': <String, String>{
+                    'backdrop-tag': 'backdrop-blurhash',
+                  },
+                },
+              },
+            ],
+            'TotalRecordCount': 1,
+          }),
+        ),
+        serverUrl: 'https://example.test',
+        accessToken: 'token',
+        deviceId: 'device',
+        userId: 'user-id',
+      );
+
+      final page = await repository.loadPage(
+        filter: const CatalogFilter(sort: CatalogSort.random),
+      );
+
+      expect(page.candidates.single.poster.aspectRatio, 0.71);
+      expect(page.candidates.single.poster.blurHash, 'poster-blurhash');
+      expect(page.candidates.single.backdrop.blurHash, 'backdrop-blurhash');
+    },
+  );
+
   test('should reject page sizes outside the bounded runtime range', () {
     expect(
       () => JellyfinCatalogRepository(
@@ -36,7 +367,7 @@ void main() {
     );
   });
   test(
-    'should request bounded movie and series pages with authenticated metadata',
+    'should request bounded movie pages with authenticated metadata',
     () async {
       final client = RecordingHttpClient(
         (request) async => _jsonResponse({
@@ -58,7 +389,7 @@ void main() {
       expect(page.candidates.single.name, 'Candy Movie');
       expect(request.url.path, '/jellyfin/Items');
       expect(request.url.queryParameters['userId'], 'user-id');
-      expect(request.url.queryParameters['includeItemTypes'], 'Movie,Series');
+      expect(request.url.queryParameters['includeItemTypes'], 'Movie');
       expect(request.url.queryParameters['recursive'], 'true');
       expect(request.url.queryParameters['limit'], '50');
       expect(request.url.queryParameters['enableUserData'], 'true');
@@ -71,8 +402,9 @@ void main() {
       expect(request.url.queryParameters['filters'], 'IsNotFolder');
       expect(
         request.url.queryParameters['fields'],
-        'Overview,Genres,People,PrimaryImageAspectRatio,DateCreated',
+        'Genres,PrimaryImageAspectRatio,DateCreated',
       );
+      expect(request.url.queryParameters['imageTypeLimit'], '1');
       expect(request.followRedirects, isFalse);
       expect(
         request.headers['authorization'],
@@ -106,12 +438,12 @@ void main() {
     expect(page.failure, isA<MissingMetadataCatalogFailure>());
   });
 
-  test('should map whole Series metadata and safe image URIs', () async {
+  test('should ignore series returned by a nonconforming server', () async {
     final repository = JellyfinCatalogRepository(
       client: RecordingHttpClient(
         (request) async => _jsonResponse({
-          'Items': <Map<String, Object?>>[_seriesJson()],
-          'TotalRecordCount': 1,
+          'Items': <Map<String, Object?>>[_seriesJson(), _movieJson()],
+          'TotalRecordCount': 2,
         }),
       ),
       serverUrl: 'https://example.test/jellyfin',
@@ -120,16 +452,10 @@ void main() {
       userId: 'user-id',
     );
 
-    final candidate = (await repository.streamPages().first).candidates.single;
+    final candidates = (await repository.streamPages().first).candidates;
 
-    expect(candidate.mediaType, CatalogMediaType.series);
-    expect(
-      candidate.poster.uri?.path,
-      '/jellyfin/Items/series-1/Images/Primary',
-    );
-    expect(candidate.poster.uri?.query, 'tag=primary');
-    expect(candidate.poster.uri.toString(), isNot(contains('token')));
-    expect(candidate.backdrop.aspectRatio, greaterThan(1));
+    expect(candidates, hasLength(1));
+    expect(candidates.single.mediaType, CatalogMediaType.movie);
   });
 
   test('should return typed unauthorized and server failures', () async {
@@ -757,10 +1083,6 @@ void main() {
               watched: true,
               favorite: true,
               officialRatings: <String>{'R', 'PG-13'},
-              seriesStatuses: <CatalogSeriesStatus>{
-                CatalogSeriesStatus.continuing,
-                CatalogSeriesStatus.ended,
-              },
             ),
           )
           .first;
@@ -770,7 +1092,7 @@ void main() {
       expect(query['isPlayed'], 'true');
       expect(query['isFavorite'], 'true');
       expect(query['officialRatings'], 'PG-13|R');
-      expect(query['seriesStatus'], 'Continuing,Ended');
+      expect(query, isNot(contains('seriesStatus')));
       expect(query['filters'], 'IsNotFolder');
     },
   );
@@ -813,7 +1135,7 @@ void main() {
     'should map every supported sort to its Jellyfin query values',
     () async {
       for (final entry in <CatalogSort, List<String?>>{
-        CatalogSort.defaultOrder: <String?>[null, null],
+        CatalogSort.defaultOrder: <String?>['CommunityRating', 'Descending'],
         CatalogSort.recentlyAdded: <String?>['DateCreated', 'Descending'],
         CatalogSort.title: <String?>['SortName', 'Ascending'],
         CatalogSort.releaseYear: <String?>['ProductionYear', 'Descending'],

@@ -5,16 +5,19 @@ final class CatalogImage {
     required this.uri,
     required this.isFallback,
     required this.aspectRatio,
+    this.blurHash,
   });
 
   const CatalogImage.fallback()
     : uri = null,
       isFallback = true,
-      aspectRatio = 0.67;
+      aspectRatio = 0.67,
+      blurHash = null;
 
   final Uri? uri;
   final bool isFallback;
   final double aspectRatio;
+  final String? blurHash;
 
   Uri? variantUri({required int maxWidth, required int quality, int? blur}) {
     final source = uri;

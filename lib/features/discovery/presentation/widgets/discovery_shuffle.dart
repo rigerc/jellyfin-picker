@@ -13,12 +13,14 @@ final class DiscoveryShuffle extends StatelessWidget {
   const DiscoveryShuffle({
     required this.state,
     this.onToggleFavorite,
+    this.onLoadDetails,
     this.imageHeaders = const <String, String>{},
     super.key,
   });
 
   final DiscoveryState state;
   final FavoriteToggle? onToggleFavorite;
+  final CandidateDetailsLoader? onLoadDetails;
   final Map<String, String> imageHeaders;
 
   @override
@@ -52,6 +54,7 @@ final class DiscoveryShuffle extends StatelessWidget {
                     key: WidgetKeys.discoveryShuffleCandidate(candidate.id),
                     candidate: candidate,
                     onToggleFavorite: onToggleFavorite,
+                    onLoadDetails: onLoadDetails,
                     imageHeaders: imageHeaders,
                     posterFit: BoxFit.contain,
                   ),

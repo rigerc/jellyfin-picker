@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
-import 'package:jellyfin_picker/core/media/entities/catalog_filter.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_models.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_sections.dart';
@@ -44,15 +43,6 @@ final class DiscoveryMetadataFilterSection extends StatelessWidget {
               keyFor: WidgetKeys.discoveryOfficialRating,
               onChanged: data.onOfficialRatingChanged,
             ),
-          if (data.availableStatuses.isNotEmpty)
-            DiscoveryMetadataChoices<CatalogSeriesStatus>(
-              label: l10n.discoverySeriesStatusesFilterLabel,
-              values: data.availableStatuses,
-              selected: data.seriesStatuses,
-              keyFor: (value) => WidgetKeys.discoverySeriesStatus(value.name),
-              labelFor: (value) => _statusLabel(l10n, value),
-              onChanged: data.onSeriesStatusChanged,
-            ),
           if (data.availableDecades.isNotEmpty)
             DiscoveryMetadataChoices<int>(
               label: l10n.discoveryDecadeFilterLabel,
@@ -78,11 +68,4 @@ final class DiscoveryMetadataFilterSection extends StatelessWidget {
       ),
     );
   }
-
-  static String _statusLabel(
-    AppLocalizations l10n,
-    CatalogSeriesStatus value,
-  ) => value == CatalogSeriesStatus.continuing
-      ? l10n.discoverySeriesContinuingLabel
-      : l10n.discoverySeriesEndedLabel;
 }

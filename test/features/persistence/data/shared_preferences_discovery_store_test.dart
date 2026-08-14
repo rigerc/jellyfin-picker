@@ -37,7 +37,6 @@ void main() {
         addedWithin: CatalogAddedWindow.ninetyDays,
         sort: CatalogSort.recentlyAdded,
         officialRatings: <String>{'PG-13'},
-        seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.continuing},
         watched: false,
       ),
       presets: <String, CatalogFilter>{

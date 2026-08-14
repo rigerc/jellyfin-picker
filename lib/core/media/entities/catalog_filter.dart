@@ -16,6 +16,7 @@ enum CatalogAddedWindow {
 
 enum CatalogSort {
   defaultOrder,
+  random,
   recentlyAdded,
   title,
   releaseYear,
@@ -29,6 +30,7 @@ enum CatalogSeriesStatus { continuing, ended }
 final class CatalogFilter {
   const CatalogFilter({
     Set<CatalogMediaType> mediaTypes = const <CatalogMediaType>{},
+    this.libraryId,
     this.searchTerm = '',
     this.addedWithin,
     this.dateWindowAnchor,
@@ -62,6 +64,7 @@ final class CatalogFilter {
        _seriesStatuses = seriesStatuses;
 
   final Set<CatalogMediaType> _mediaTypes;
+  final String? libraryId;
   final String searchTerm;
   final CatalogAddedWindow? addedWithin;
   final DateTime? dateWindowAnchor;
@@ -92,6 +95,7 @@ final class CatalogFilter {
       Set<CatalogSeriesStatus>.unmodifiable(_seriesStatuses);
 
   bool get isActive =>
+      libraryId != null ||
       mediaTypes.isNotEmpty ||
       searchTerm.trim().isNotEmpty ||
       addedWithin != null ||
@@ -120,7 +124,8 @@ final class CatalogFilter {
       _matchesFlags(candidate);
 
   bool _matchesMediaType(CatalogCandidate candidate) =>
-      mediaTypes.isEmpty || mediaTypes.contains(candidate.mediaType);
+      candidate.mediaType == CatalogMediaType.movie &&
+      (mediaTypes.isEmpty || mediaTypes.contains(CatalogMediaType.movie));
 
   bool _matchesSearch(CatalogCandidate candidate) {
     final normalizedSearchTerm = _normalize(searchTerm);
@@ -204,6 +209,7 @@ final class CatalogFilter {
 
   CatalogFilter copyWith({
     Set<CatalogMediaType>? mediaTypes,
+    Object? libraryId = _unset,
     String? searchTerm,
     Object? addedWithin = _unset,
     Object? dateWindowAnchor = _unset,
@@ -222,6 +228,7 @@ final class CatalogFilter {
     Object? favorite = _unset,
   }) => CatalogFilter(
     mediaTypes: mediaTypes ?? this.mediaTypes,
+    libraryId: _copyString(libraryId, this.libraryId),
     searchTerm: searchTerm ?? this.searchTerm,
     addedWithin: _copyWindow(addedWithin, this.addedWithin),
     dateWindowAnchor: _copyDate(dateWindowAnchor, this.dateWindowAnchor),
@@ -292,6 +299,13 @@ final class CatalogFilter {
       ? current
       : value is bool
       ? value
+      : null;
+
+  static String? _copyString(Object? value, String? current) =>
+      identical(value, _unset)
+      ? current
+      : value is String && value.trim().isNotEmpty
+      ? value.trim()
       : null;
 
   bool get _hasOfficialRatingConstraint =>

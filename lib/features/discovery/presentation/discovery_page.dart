@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_facets.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_library.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_clear_dialog.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_controls.dart';
@@ -10,17 +12,27 @@ import 'package:jellyfin_picker/features/discovery/presentation/widgets/discover
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_mode_switcher.dart';
 
 typedef FavoriteToggle = Future<bool> Function(CatalogCandidate candidate);
+typedef CandidateDetailsLoader =
+    Future<CatalogCandidate?> Function(CatalogCandidate candidate);
 
 final class DiscoveryPage extends StatelessWidget {
   const DiscoveryPage({
     required this.cubit,
     this.onToggleFavorite,
+    this.onLoadDetails,
+    this.onLoadMore,
+    this.libraries = const <CatalogLibrary>[],
+    this.facets = const CatalogFacets(),
     this.imageHeaders = const <String, String>{},
     super.key,
   });
 
   final DiscoveryCubit cubit;
   final FavoriteToggle? onToggleFavorite;
+  final CandidateDetailsLoader? onLoadDetails;
+  final Future<void> Function()? onLoadMore;
+  final List<CatalogLibrary> libraries;
+  final CatalogFacets facets;
   final Map<String, String> imageHeaders;
 
   @override
@@ -29,6 +41,10 @@ final class DiscoveryPage extends StatelessWidget {
       value: cubit,
       child: _DiscoveryView(
         onToggleFavorite: onToggleFavorite,
+        onLoadDetails: onLoadDetails,
+        onLoadMore: onLoadMore,
+        libraries: libraries,
+        facets: facets,
         imageHeaders: imageHeaders,
       ),
     );
@@ -36,9 +52,20 @@ final class DiscoveryPage extends StatelessWidget {
 }
 
 final class _DiscoveryView extends StatelessWidget {
-  const _DiscoveryView({required this.imageHeaders, this.onToggleFavorite});
+  const _DiscoveryView({
+    required this.imageHeaders,
+    required this.libraries,
+    required this.facets,
+    this.onToggleFavorite,
+    this.onLoadDetails,
+    this.onLoadMore,
+  });
 
   final FavoriteToggle? onToggleFavorite;
+  final CandidateDetailsLoader? onLoadDetails;
+  final Future<void> Function()? onLoadMore;
+  final List<CatalogLibrary> libraries;
+  final CatalogFacets facets;
   final Map<String, String> imageHeaders;
 
   @override
@@ -59,10 +86,16 @@ final class _DiscoveryView extends StatelessWidget {
           child: Column(
             spacing: CandySpacing.cardGap,
             children: <Widget>[
-              DiscoveryControls(onClear: () => confirmClearDiscovery(context)),
+              DiscoveryControls(
+                libraries: libraries,
+                facets: facets,
+                onClear: () => confirmClearDiscovery(context),
+              ),
               Expanded(
                 child: DiscoveryModeSwitcher(
                   onToggleFavorite: onToggleFavorite,
+                  onLoadDetails: onLoadDetails,
+                  onLoadMore: onLoadMore,
                   imageHeaders: imageHeaders,
                 ),
               ),

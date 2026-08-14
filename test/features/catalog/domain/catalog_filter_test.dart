@@ -38,9 +38,9 @@ void main() {
 
   test('should combine dimensions with AND and selected values with OR', () {
     const candidate = CatalogCandidate(
-      id: 'series-1',
-      name: 'Series',
-      mediaType: CatalogMediaType.series,
+      id: 'movie-1',
+      name: 'Movie',
+      mediaType: CatalogMediaType.movie,
       genres: <String>{'Drama'},
       poster: CatalogImage.fallback(),
       backdrop: CatalogImage.fallback(),
@@ -48,7 +48,7 @@ void main() {
 
     expect(
       const CatalogFilter(
-        mediaTypes: <CatalogMediaType>{CatalogMediaType.movie},
+        mediaTypes: <CatalogMediaType>{CatalogMediaType.series},
       ).matches(candidate),
       isFalse,
     );
@@ -167,9 +167,9 @@ void main() {
     'should enforce decade edges, media selections, and tri-state flags',
     () {
       const candidate = CatalogCandidate(
-        id: 'series',
-        name: 'Series',
-        mediaType: CatalogMediaType.series,
+        id: 'movie',
+        name: 'Movie',
+        mediaType: CatalogMediaType.movie,
         year: 2020,
         watched: false,
         favorite: true,
@@ -187,10 +187,7 @@ void main() {
       );
       expect(
         const CatalogFilter(
-          mediaTypes: <CatalogMediaType>{
-            CatalogMediaType.movie,
-            CatalogMediaType.series,
-          },
+          mediaTypes: <CatalogMediaType>{CatalogMediaType.movie},
         ).matches(candidate),
         isTrue,
       );
@@ -260,7 +257,6 @@ void main() {
           searchTerm: 'movie',
           addedWithin: CatalogAddedWindow.sevenDays,
           officialRatings: <String>{'PG'},
-          seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.continuing},
         ).isActive,
         isTrue,
       );
@@ -380,36 +376,16 @@ void main() {
     );
   });
 
-  test('should match series status aliases', () {
-    const continuing = CatalogCandidate(
-      id: 'continuing',
-      name: 'Continuing',
+  test('should reject a series even when no filters are active', () {
+    const series = CatalogCandidate(
+      id: 'series',
+      name: 'Series',
       mediaType: CatalogMediaType.series,
-      status: 'Returning Series',
-      poster: CatalogImage.fallback(),
-      backdrop: CatalogImage.fallback(),
-    );
-    const ended = CatalogCandidate(
-      id: 'ended',
-      name: 'Ended',
-      mediaType: CatalogMediaType.series,
-      status: 'Cancelled',
       poster: CatalogImage.fallback(),
       backdrop: CatalogImage.fallback(),
     );
 
-    expect(
-      const CatalogFilter(
-        seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.continuing},
-      ).matches(continuing),
-      isTrue,
-    );
-    expect(
-      const CatalogFilter(
-        seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.ended},
-      ).matches(ended),
-      isTrue,
-    );
+    expect(const CatalogFilter().matches(series), isFalse);
   });
 
   test('should clear nullable constraints when copying a filter', () {

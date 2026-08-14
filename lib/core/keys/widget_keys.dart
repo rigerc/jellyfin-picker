@@ -29,6 +29,7 @@ abstract final class WidgetKeys {
   );
   static const discoveryRevealButton = Key('discovery-reveal-button');
   static const discoveryDetails = Key('discovery-details');
+  static const discoveryDetailsLoading = Key('discovery-details-loading');
   static const discoveryClearButton = Key('discovery-clear-button');
   static const discoveryMoreButton = Key('discovery-more-button');
   static const discoveryFilterButton = Key('discovery-filter-button');
@@ -39,6 +40,7 @@ abstract final class WidgetKeys {
     'discovery-active-filter-indicator',
   );
   static const discoverySearchField = Key('discovery-search-field');
+  static const discoveryLibraryField = Key('discovery-library-field');
   static const discoveryGenresField = Key('discovery-genres-field');
   static const discoveryRuntimeField = Key('discovery-runtime-field');
   static const discoveryCommunityRatingField = Key(
@@ -59,6 +61,7 @@ abstract final class WidgetKeys {
   static const discoveryApplyFilters = Key('discovery-apply-filters');
   static const discoveryPresetName = Key('discovery-preset-name');
   static const discoverySavePreset = Key('discovery-save-preset');
+  static const discoveryPosterPreview = Key('discovery-poster-preview');
 
   static Key discoveryCandidate(String id) => Key('discovery-candidate-$id');
 
@@ -66,6 +69,9 @@ abstract final class WidgetKeys {
       Key('discovery-shuffle-candidate-$id');
 
   static Key discoveryFavorite(String id) => Key('discovery-favorite-$id');
+
+  static Key discoveryPosterBlurHash(String id) =>
+      Key('discovery-poster-blurhash-$id');
 
   static Key discoveryOfficialRating(String value) =>
       Key('discovery-official-rating-$value');
