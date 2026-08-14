@@ -9,10 +9,7 @@ import 'package:jellyfin_picker/features/discovery/domain/serialization/catalog_
 void main() {
   test('should round trip every catalog filter field', () {
     const filter = CatalogFilter(
-      mediaTypes: <CatalogMediaType>{
-        CatalogMediaType.movie,
-        CatalogMediaType.series,
-      },
+      mediaTypes: <CatalogMediaType>{CatalogMediaType.movie},
       minimumRuntimeMinutes: 10,
       maximumRuntimeMinutes: 180,
       minimumCommunityRating: 6.5,
@@ -26,14 +23,33 @@ void main() {
       searchTerm: ' candy ',
       addedWithin: CatalogAddedWindow.ninetyDays,
       sort: CatalogSort.recentlyAdded,
-      officialRatings: <String>{'PG-13', 'TV-14'},
-      seriesStatuses: <CatalogSeriesStatus>{CatalogSeriesStatus.ended},
+      officialRatings: <String>{'PG-13'},
     );
 
     final encoded = CatalogFilterCodec.encode(filter);
     final decoded = CatalogFilterCodec.decode(encoded);
 
     expect(CatalogFilterCodec.encode(decoded!), encoded);
+  });
+
+  test('should discard legacy TV constraints while restoring movies', () {
+    final decoded = CatalogFilterCodec.decode(<String, Object?>{
+      'mediaTypes': <String>['movie', 'series'],
+      'minimumRuntimeMinutes': null,
+      'maximumRuntimeMinutes': null,
+      'minimumCommunityRating': null,
+      'maximumCommunityRating': null,
+      'minimumCriticRating': null,
+      'maximumCriticRating': null,
+      'genres': <String>[],
+      'decades': <int>[],
+      'seriesStatuses': <String>['continuing'],
+      'watched': null,
+      'favorite': null,
+    });
+
+    expect(decoded?.mediaTypes, <CatalogMediaType>{CatalogMediaType.movie});
+    expect(decoded?.seriesStatuses, isEmpty);
   });
 
   test('should restore old filter snapshots with new defaults', () {

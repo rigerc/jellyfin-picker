@@ -8,10 +8,14 @@ import 'package:jellyfin_picker/core/network/media_browser_authorization.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/catalog/application/catalog_cubit.dart';
 import 'package:jellyfin_picker/features/catalog/data/jellyfin_catalog_repository.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_facets.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_filter.dart';
 import 'package:jellyfin_picker/features/connection/domain/entities/stored_session.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
 import 'package:jellyfin_picker/features/discovery/application/random_discovery_selector.dart';
+import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_mode.dart';
 import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_state.dart';
+import 'package:jellyfin_picker/features/discovery/domain/repositories/discovery_store.dart';
 import 'package:jellyfin_picker/features/discovery/domain/serialization/catalog_filter_codec.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/discovery_page.dart';
 import 'package:jellyfin_picker/features/favorites/application/favorite_cubit.dart';
@@ -24,12 +28,14 @@ final class DiscoverySessionPage extends StatefulWidget {
     required this.session,
     required this.client,
     this.onReconnect,
+    this.discoveryStore,
     super.key,
   });
 
   final StoredSession session;
   final http.Client client;
   final VoidCallback? onReconnect;
+  final DiscoveryStore? discoveryStore;
 
   @override
   State<DiscoverySessionPage> createState() => _DiscoverySessionPageState();
@@ -41,6 +47,7 @@ final class _DiscoverySessionPageState extends State<DiscoverySessionPage> {
   late final FavoriteCubit _favoriteCubit;
   StreamSubscription<DiscoveryState>? _discoverySubscription;
   String? _loadedFilterFingerprint;
+  bool _refillingShuffle = false;
 
   @override
   void initState() {
@@ -56,9 +63,11 @@ final class _DiscoverySessionPageState extends State<DiscoverySessionPage> {
       ),
     );
     _discoveryCubit = DiscoveryCubit(
-      store: SharedPreferencesDiscoveryStore(
-        SharedPreferencesAsyncBlobPreferences(),
-      ),
+      store:
+          widget.discoveryStore ??
+          SharedPreferencesDiscoveryStore(
+            SharedPreferencesAsyncBlobPreferences(),
+          ),
       scopeKey: '${session.serverUrl}/${session.userId}',
       selector: RandomDiscoverySelector(),
     );
@@ -77,25 +86,58 @@ final class _DiscoverySessionPageState extends State<DiscoverySessionPage> {
   Future<void> _start() async {
     await _discoveryCubit.hydrate();
     _discoverySubscription = _discoveryCubit.stream.listen(
-      _reloadWhenFilterChanges,
+      _reloadWhenDiscoveryChanges,
     );
     await _loadCatalog(_discoveryCubit.state);
   }
 
-  void _reloadWhenFilterChanges(DiscoveryState state) {
-    final fingerprint = CatalogFilterCodec.encode(state.filter).toString();
-    if (fingerprint == _loadedFilterFingerprint) {
+  void _reloadWhenDiscoveryChanges(DiscoveryState state) {
+    final fingerprint = _fingerprint(state);
+    if (fingerprint != _loadedFilterFingerprint) {
+      unawaited(_loadCatalog(state));
       return;
     }
-    unawaited(_loadCatalog(state));
+    if (state.mode == DiscoveryMode.shuffle &&
+        state.noEligibleCandidates &&
+        !_refillingShuffle) {
+      _refillingShuffle = true;
+      unawaited(
+        _loadCatalog(state).whenComplete(() => _refillingShuffle = false),
+      );
+    }
   }
 
   Future<void> _loadCatalog(DiscoveryState state) async {
-    _loadedFilterFingerprint = CatalogFilterCodec.encode(
-      state.filter,
-    ).toString();
-    await _catalogCubit.load(filter: state.filter);
+    final filter = _effectiveFilter(state);
+    _loadedFilterFingerprint = CatalogFilterCodec.encode(filter).toString();
+    await _catalogCubit.load(
+      filter: filter,
+      excludedIds: _shuffleExclusions(state),
+      includedIds: _shuffleShortlist(state),
+    );
   }
+
+  CatalogFilter _effectiveFilter(DiscoveryState state) =>
+      state.mode == DiscoveryMode.shuffle
+      ? state.filter.copyWith(sort: CatalogSort.random)
+      : state.filter;
+
+  String _fingerprint(DiscoveryState state) =>
+      CatalogFilterCodec.encode(_effectiveFilter(state)).toString();
+
+  Set<String> _shuffleExclusions(DiscoveryState state) {
+    if (state.mode != DiscoveryMode.shuffle) {
+      return const <String>{};
+    }
+    final exclusions = <String>{...state.recentPickIds.reversed};
+    exclusions.addAll(state.rejectedIds);
+    return Set<String>.unmodifiable(exclusions.take(100));
+  }
+
+  Set<String> _shuffleShortlist(DiscoveryState state) =>
+      state.mode == DiscoveryMode.shuffle
+      ? Set<String>.unmodifiable(state.likedIds.take(50))
+      : const <String>{};
 
   @override
   void dispose() {
@@ -115,6 +157,15 @@ final class _DiscoverySessionPageState extends State<DiscoverySessionPage> {
         BlocProvider<FavoriteCubit>.value(value: _favoriteCubit),
       ],
       child: BlocConsumer<CatalogCubit, CatalogState>(
+        listenWhen: (previous, current) => switch ((previous, current)) {
+          (
+            CatalogLoaded(candidates: final before),
+            CatalogLoaded(candidates: final after),
+          ) =>
+            !identical(before, after),
+          (_, CatalogLoaded()) => true,
+          _ => false,
+        },
         listener: (context, state) {
           if (state case CatalogLoaded(:final candidates)) {
             unawaited(_discoveryCubit.replaceCandidates(candidates));
@@ -141,6 +192,12 @@ final class _DiscoverySessionPageState extends State<DiscoverySessionPage> {
             children: <Widget>[
               DiscoveryPage(
                 cubit: _discoveryCubit,
+                libraries: state is CatalogLoaded ? state.libraries : const [],
+                facets: state is CatalogLoaded
+                    ? state.facets
+                    : const CatalogFacets(),
+                onLoadMore: _catalogCubit.loadMore,
+                onLoadDetails: _loadDetails,
                 imageHeaders: <String, String>{
                   'Authorization': MediaBrowserAuthorization.value(
                     deviceId: session.deviceId,
@@ -167,6 +224,9 @@ final class _DiscoverySessionPageState extends State<DiscoverySessionPage> {
     return mutation?.status == FavoriteStatus.succeeded &&
         mutation?.value == requested;
   }
+
+  Future<CatalogCandidate?> _loadDetails(CatalogCandidate candidate) async =>
+      (await _catalogCubit.loadDetails(candidate.id)).value;
 
   void _retry() => unawaited(_loadCatalog(_discoveryCubit.state));
 }

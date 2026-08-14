@@ -3,6 +3,7 @@ import 'package:jellyfin_picker/core/media/entities/catalog_filter.dart';
 
 abstract final class CatalogFilterCodec {
   static Map<String, Object?> encode(CatalogFilter filter) => <String, Object?>{
+    'libraryId': filter.libraryId,
     'mediaTypes': filter.mediaTypes.map((type) => type.name).toList()..sort(),
     'searchTerm': filter.searchTerm,
     'addedWithin': filter.addedWithin?.name,
@@ -27,6 +28,9 @@ abstract final class CatalogFilterCodec {
       return null;
     }
     final mediaTypes = _mediaTypes(value['mediaTypes']);
+    final libraryId = value.containsKey('libraryId')
+        ? _nullableString(value['libraryId'])
+        : null;
     final genres = _strings(value['genres']);
     final decades = _integers(value['decades']);
     final searchTerm = value.containsKey('searchTerm')
@@ -46,6 +50,9 @@ abstract final class CatalogFilterCodec {
         searchTerm == null ||
         officialRatings == null ||
         seriesStatuses == null ||
+        (value.containsKey('libraryId') &&
+            value['libraryId'] != null &&
+            libraryId == null) ||
         (value.containsKey('addedWithin') &&
             value['addedWithin'] != null &&
             addedWithin == null) ||
@@ -77,6 +84,7 @@ abstract final class CatalogFilterCodec {
       return null;
     }
     return CatalogFilter(
+      libraryId: libraryId,
       mediaTypes: mediaTypes,
       searchTerm: searchTerm,
       addedWithin: addedWithin,
@@ -110,7 +118,9 @@ abstract final class CatalogFilterCodec {
       if (type == null) {
         return null;
       }
-      result.add(type);
+      if (type == CatalogMediaType.movie) {
+        result.add(type);
+      }
     }
     return result;
   }
@@ -133,6 +143,7 @@ abstract final class CatalogFilterCodec {
 
   static CatalogSort? _sort(Object? value) => switch (value) {
     'defaultOrder' => CatalogSort.defaultOrder,
+    'random' => CatalogSort.random,
     'recentlyAdded' => CatalogSort.recentlyAdded,
     'title' => CatalogSort.title,
     'releaseYear' => CatalogSort.releaseYear,
@@ -156,7 +167,8 @@ abstract final class CatalogFilterCodec {
       if (status == null) {
         return null;
       }
-      result.add(status);
+      // Accept legacy TV filters so stored sessions remain readable, but drop
+      // them because discovery is movie-only.
     }
     return result;
   }
@@ -165,6 +177,9 @@ abstract final class CatalogFilterCodec {
       value is List && value.every((item) => item is int)
       ? value.whereType<int>().toSet()
       : null;
+
+  static String? _nullableString(Object? value) =>
+      value is String && value.trim().isNotEmpty ? value.trim() : null;
 
   static int? _int(Object? value) => value is int ? value : null;
 

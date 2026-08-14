@@ -79,6 +79,44 @@ final class DiscoveryRobot {
     );
   }
 
+  void expectLibrarySelectorVisible() {
+    expect(find.byKey(WidgetKeys.discoveryLibraryField), findsOneWidget);
+  }
+
+  void expectServerFacetsVisible({
+    required String genre,
+    required int decade,
+    required String rating,
+  }) {
+    expect(find.byKey(WidgetKeys.discoveryGenre(genre)), findsOneWidget);
+    expect(find.byKey(WidgetKeys.discoveryDecade(decade)), findsOneWidget);
+    expect(
+      find.byKey(WidgetKeys.discoveryOfficialRating(rating)),
+      findsOneWidget,
+    );
+  }
+
+  Future<void> selectLibraryAndApply(String label) async {
+    await _selectDropdownValue(WidgetKeys.discoveryLibraryField, label);
+    await applyOpenFilters();
+  }
+
+  void expectDetailsLoading() {
+    expect(find.byKey(WidgetKeys.discoveryDetailsLoading), findsOneWidget);
+  }
+
+  void expectDetailsSynopsis(String synopsis) {
+    expect(find.text(synopsis), findsOneWidget);
+  }
+
+  void expectPosterBlurHashVisible(String id) {
+    expect(find.byKey(WidgetKeys.discoveryPosterBlurHash(id)), findsOneWidget);
+  }
+
+  void expectNoPosterPreviewRequest() {
+    expect(find.byKey(WidgetKeys.discoveryPosterPreview), findsNothing);
+  }
+
   Future<void> openQuickFilters() async {
     await tester.tap(find.byKey(WidgetKeys.discoveryFilterButton));
     await tester.pumpAndSettle();
@@ -128,7 +166,6 @@ final class DiscoveryRobot {
       WidgetKeys.discoveryGenre('mystery'),
       WidgetKeys.discoveryDecade(2020),
       WidgetKeys.discoveryOfficialRating('PG-13'),
-      WidgetKeys.discoverySeriesStatus('continuing'),
     ]) {
       await tester.scrollUntilVisible(
         find.byKey(key),
@@ -259,7 +296,7 @@ final class DiscoveryRobot {
     expect(find.textContaining('8.4'), findsWidgets);
     expect(find.textContaining('91'), findsWidgets);
     expect(find.textContaining('PG-13'), findsWidgets);
-    expect(find.textContaining('Returning Series'), findsWidgets);
+    expect(find.textContaining('Released'), findsWidgets);
     expect(find.textContaining('Ava Actor'), findsWidgets);
   }
 

@@ -436,6 +436,18 @@ abstract class AppLocalizations {
   /// **'Search titles'**
   String get discoverySearchTitleLabel;
 
+  /// No description provided for @discoveryLibraryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get discoveryLibraryLabel;
+
+  /// No description provided for @discoveryAllLibrariesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'All libraries'**
+  String get discoveryAllLibrariesLabel;
+
   /// No description provided for @discoverySortLabel.
   ///
   /// In en, this message translates to:
@@ -447,6 +459,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Recommended'**
   String get discoverySortDefaultLabel;
+
+  /// No description provided for @discoverySortRandomLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Random'**
+  String get discoverySortRandomLabel;
 
   /// No description provided for @discoverySortRecentlyAddedLabel.
   ///
@@ -526,24 +544,6 @@ abstract class AppLocalizations {
   /// **'Content ratings'**
   String get discoveryOfficialRatingsFilterLabel;
 
-  /// No description provided for @discoverySeriesStatusesFilterLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Series status'**
-  String get discoverySeriesStatusesFilterLabel;
-
-  /// No description provided for @discoverySeriesContinuingLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Continuing'**
-  String get discoverySeriesContinuingLabel;
-
-  /// No description provided for @discoverySeriesEndedLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Ended'**
-  String get discoverySeriesEndedLabel;
-
   /// No description provided for @discoveryFineTuneFiltersLabel.
   ///
   /// In en, this message translates to:
@@ -561,24 +561,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show matches'**
   String get discoveryApplyFiltersLabel;
-
-  /// No description provided for @discoveryMediaTypeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Media type'**
-  String get discoveryMediaTypeLabel;
-
-  /// No description provided for @discoveryMoviesLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Movies'**
-  String get discoveryMoviesLabel;
-
-  /// No description provided for @discoverySeriesLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'TV series'**
-  String get discoverySeriesLabel;
 
   /// No description provided for @discoveryRuntimeFilterLabel.
   ///

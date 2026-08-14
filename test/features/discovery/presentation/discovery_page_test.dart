@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
@@ -6,12 +8,154 @@ import 'package:jellyfin_picker/core/media/entities/catalog_filter.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/discovery_page.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_facets.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_library.dart';
 import 'package:jellyfin_picker/l10n/generated/app_localizations.dart';
 
 import '../../../shared/discovery_robot.dart';
 import '../../../shared/fake_discovery_store.dart';
 
 void main() {
+  testWidgets('should scope discovery with Jellyfin libraries and facets', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(
+      tester,
+      cubit,
+      libraries: const <CatalogLibrary>[
+        CatalogLibrary(
+          id: 'movies-id',
+          name: 'Movies',
+          collectionType: 'movies',
+        ),
+      ],
+      facets: const CatalogFacets(
+        genres: <String>['Server Drama'],
+        years: <int>[1997],
+        officialRatings: <String>['R'],
+      ),
+    );
+    await robot.openQuickFilters();
+
+    robot.expectLibrarySelectorVisible();
+    robot.expectServerFacetsVisible(
+      genre: 'Server Drama',
+      decade: 1990,
+      rating: 'R',
+    );
+    await robot.selectLibraryAndApply('Movies');
+
+    expect(cubit.state.filter.libraryId, 'movies-id');
+    await cubit.close();
+  });
+
+  testWidgets('should clear a saved library that is no longer accessible', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.updateFilter(const CatalogFilter(libraryId: 'removed-id'));
+    await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(
+      tester,
+      cubit,
+      libraries: const <CatalogLibrary>[
+        CatalogLibrary(
+          id: 'movies-id',
+          name: 'Movies',
+          collectionType: 'movies',
+        ),
+      ],
+    );
+    await robot.openQuickFilters();
+
+    final field = tester.widget<DropdownButtonFormField<String?>>(
+      find.byKey(WidgetKeys.discoveryLibraryField),
+    );
+    expect(field.initialValue, isNull);
+    await cubit.close();
+  });
+
+  testWidgets('should lazily replace summary data when details open', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[
+      _candidate(overview: null),
+    ]);
+    final details = Completer<CatalogCandidate?>();
+    final robot = DiscoveryRobot(tester);
+    var calls = 0;
+
+    await _pumpPage(
+      tester,
+      cubit,
+      onLoadDetails: (candidate) {
+        calls++;
+        return details.future;
+      },
+    );
+    await robot.openFirstDetails();
+
+    robot.expectDetailsLoading();
+    details.complete(_candidate(overview: 'Loaded from Jellyfin.'));
+    await tester.pumpAndSettle();
+
+    robot.expectDetailsSynopsis('Loaded from Jellyfin.');
+    expect(calls, 1);
+    await cubit.close();
+  });
+
+  testWidgets('should request another bounded page near the grid end', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(
+      List<CatalogCandidate>.generate(
+        20,
+        (index) => _candidate(id: 'movie-$index', name: 'Movie $index'),
+      ),
+    );
+    final robot = DiscoveryRobot(tester);
+    var calls = 0;
+
+    await _pumpPage(
+      tester,
+      cubit,
+      onLoadMore: () async {
+        calls++;
+      },
+    );
+    await robot.scrollGridToBottom();
+    await tester.pump();
+
+    expect(calls, 1);
+    await cubit.close();
+  });
+
+  testWidgets('should render Jellyfin blurhash without a preview request', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[
+      _candidate(
+        poster: _networkPoster(blurHash: 'LKO2?U%2Tw=w]~RBVZRi};RPxuwH'),
+      ),
+    ]);
+    final robot = DiscoveryRobot(tester);
+
+    await _pumpPage(tester, cubit);
+
+    robot.expectPosterBlurHashVisible('movie-1');
+    robot.expectNoPosterPreviewRequest();
+    await cubit.close();
+  });
+
   testWidgets('should preserve the shared session across all peer modes', (
     tester,
   ) async {
@@ -287,19 +431,17 @@ void main() {
     await cubit.close();
   });
 
-  testWidgets('should apply balanced filters to the shared session', (
-    tester,
-  ) async {
+  testWidgets('should not expose media type or series filters', (tester) async {
     final cubit = _cubit();
     await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
     final robot = DiscoveryRobot(tester);
 
     await _pumpPage(tester, cubit);
-    await robot.filterToMovies();
+    await robot.openQuickFilters();
 
-    expect(cubit.state.filter.mediaTypes, <CatalogMediaType>{
-      CatalogMediaType.movie,
-    });
+    expect(find.byKey(WidgetKeys.discoveryMovieFilter), findsNothing);
+    expect(find.byKey(WidgetKeys.discoverySeriesFilter), findsNothing);
+    expect(find.text('Series status'), findsNothing);
     await cubit.close();
   });
 
@@ -366,9 +508,7 @@ void main() {
     expect(cubit.state.filter.genres, <String>{'mystery'});
     expect(cubit.state.filter.decades, <int>{2020});
     expect(cubit.state.filter.officialRatings, <String>{'PG-13'});
-    expect(cubit.state.filter.seriesStatuses, <CatalogSeriesStatus>{
-      CatalogSeriesStatus.continuing,
-    });
+    expect(cubit.state.filter.seriesStatuses, isEmpty);
     await cubit.close();
   });
 
@@ -623,6 +763,10 @@ Future<void> _pumpPage(
   WidgetTester tester,
   DiscoveryCubit cubit, {
   Future<bool> Function(CatalogCandidate candidate)? onToggleFavorite,
+  Future<CatalogCandidate?> Function(CatalogCandidate candidate)? onLoadDetails,
+  Future<void> Function()? onLoadMore,
+  List<CatalogLibrary> libraries = const <CatalogLibrary>[],
+  CatalogFacets facets = const CatalogFacets(),
   TextScaler textScaler = TextScaler.noScaling,
   bool disableAnimations = false,
   Brightness brightness = Brightness.light,
@@ -645,7 +789,14 @@ Future<void> _pumpPage(
         ),
         child: child ?? const SizedBox.shrink(),
       ),
-      home: DiscoveryPage(cubit: cubit, onToggleFavorite: onToggleFavorite),
+      home: DiscoveryPage(
+        cubit: cubit,
+        onToggleFavorite: onToggleFavorite,
+        onLoadDetails: onLoadDetails,
+        onLoadMore: onLoadMore,
+        libraries: libraries,
+        facets: facets,
+      ),
     ),
   );
   await tester.pump();
@@ -661,7 +812,7 @@ CatalogCandidate _candidate({
   String id = 'movie-1',
   String name = 'Candy Comet',
   CatalogImage? poster,
-  String overview = 'A warm mystery in space.',
+  String? overview = 'A warm mystery in space.',
 }) => CatalogCandidate(
   id: id,
   name: name,
@@ -672,7 +823,7 @@ CatalogCandidate _candidate({
   communityRating: 8.4,
   criticRating: 91,
   officialRating: 'PG-13',
-  status: 'Returning Series',
+  status: 'Released',
   overview: overview,
   cast: const <String>['Ava Actor', 'Sam Star'],
   watched: false,
@@ -681,10 +832,11 @@ CatalogCandidate _candidate({
   backdrop: const CatalogImage.fallback(),
 );
 
-CatalogImage _networkPoster() => CatalogImage(
+CatalogImage _networkPoster({String? blurHash}) => CatalogImage(
   uri: Uri.parse(
     'https://example.test/Items/movie-1/Images/Primary?tag=poster',
   ),
   isFallback: false,
   aspectRatio: 0.67,
+  blurHash: blurHash,
 );

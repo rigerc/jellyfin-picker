@@ -14,7 +14,6 @@ final class DiscoveryFilterBody extends StatelessWidget {
   const DiscoveryFilterBody({
     required this.quickFilters,
     required this.query,
-    required this.mediaTypes,
     required this.ratings,
     required this.metadata,
     required this.presets,
@@ -25,7 +24,6 @@ final class DiscoveryFilterBody extends StatelessWidget {
 
   final DiscoveryQuickFilterData quickFilters;
   final DiscoveryQueryFilterData query;
-  final DiscoveryMediaTypeFilterData mediaTypes;
   final DiscoveryRatingFilterData ratings;
   final DiscoveryMetadataFilterData metadata;
   final DiscoveryPresetFilterData presets;
@@ -84,8 +82,6 @@ final class DiscoveryFilterBody extends StatelessWidget {
             ),
             const SizedBox(height: CandySpacing.cardGap),
             DiscoverySortFilterSection(data: query),
-            const SizedBox(height: CandySpacing.cardGap),
-            DiscoveryMediaTypeFilterSection(data: mediaTypes),
             const SizedBox(height: CandySpacing.cardGap),
             DiscoveryRatingFilterSection(data: ratings),
             const SizedBox(height: CandySpacing.cardGap),

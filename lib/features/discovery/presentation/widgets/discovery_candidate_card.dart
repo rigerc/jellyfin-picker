@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_blurhash/flutter_blurhash.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
@@ -13,6 +14,7 @@ final class DiscoveryCandidateCard extends StatelessWidget {
   const DiscoveryCandidateCard({
     required this.candidate,
     this.onToggleFavorite,
+    this.onLoadDetails,
     this.imageHeaders = const <String, String>{},
     this.posterFit = BoxFit.cover,
     super.key,
@@ -20,6 +22,7 @@ final class DiscoveryCandidateCard extends StatelessWidget {
 
   final CatalogCandidate candidate;
   final FavoriteToggle? onToggleFavorite;
+  final CandidateDetailsLoader? onLoadDetails;
   final Map<String, String> imageHeaders;
   final BoxFit posterFit;
 
@@ -31,7 +34,11 @@ final class DiscoveryCandidateCard extends StatelessWidget {
       label: localization.discoveryDetailsLabel(candidate.name),
       child: CandyBounce(
         key: WidgetKeys.discoveryCandidate(candidate.id),
-        onPressed: () => showDiscoveryDetails(context, candidate),
+        onPressed: () => showDiscoveryDetails(
+          context,
+          candidate,
+          onLoadDetails: onLoadDetails,
+        ),
         child: Card(
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -121,18 +128,35 @@ final class _Poster extends StatelessWidget {
     if (previewUri == null || displayUri == null) {
       return const _PosterFallback();
     }
+    final blurHash = candidate.poster.blurHash;
+    final placeholder = blurHash != null && validateBlurhash(blurHash)
+        ? BlurHash(
+            key: WidgetKeys.discoveryPosterBlurHash(candidate.id),
+            hash: blurHash,
+            color: Theme.of(context).colorScheme.tertiaryContainer,
+            imageFit: fit,
+            decodingWidth: 20,
+            decodingHeight: (20 / candidate.poster.aspectRatio).round().clamp(
+              1,
+              32,
+            ),
+            optimizationMode: BlurHashOptimizationMode.approximation,
+          )
+        : Image.network(
+            previewUri.toString(),
+            key: WidgetKeys.discoveryPosterPreview,
+            headers: headers,
+            fit: fit,
+            cacheWidth: CandyImages.posterPreviewNetworkWidth,
+            filterQuality: FilterQuality.low,
+            errorBuilder: (context, error, stackTrace) =>
+                const _PosterFallback(),
+          );
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
     return Stack(
       fit: StackFit.expand,
       children: <Widget>[
-        Image.network(
-          previewUri.toString(),
-          headers: headers,
-          fit: fit,
-          cacheWidth: CandyImages.posterPreviewNetworkWidth,
-          filterQuality: FilterQuality.low,
-          errorBuilder: (context, error, stackTrace) => const _PosterFallback(),
-        ),
+        placeholder,
         Image.network(
           displayUri.toString(),
           headers: headers,

@@ -207,10 +207,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoverySearchTitleLabel => 'Search titles';
 
   @override
+  String get discoveryLibraryLabel => 'Library';
+
+  @override
+  String get discoveryAllLibrariesLabel => 'All libraries';
+
+  @override
   String get discoverySortLabel => 'Sort by';
 
   @override
   String get discoverySortDefaultLabel => 'Recommended';
+
+  @override
+  String get discoverySortRandomLabel => 'Random';
 
   @override
   String get discoverySortRecentlyAddedLabel => 'Recently added';
@@ -252,15 +261,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get discoveryOfficialRatingsFilterLabel => 'Content ratings';
 
   @override
-  String get discoverySeriesStatusesFilterLabel => 'Series status';
-
-  @override
-  String get discoverySeriesContinuingLabel => 'Continuing';
-
-  @override
-  String get discoverySeriesEndedLabel => 'Ended';
-
-  @override
   String get discoveryFineTuneFiltersLabel => 'Fine-tune your picks';
 
   @override
@@ -268,15 +268,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discoveryApplyFiltersLabel => 'Show matches';
-
-  @override
-  String get discoveryMediaTypeLabel => 'Media type';
-
-  @override
-  String get discoveryMoviesLabel => 'Movies';
-
-  @override
-  String get discoverySeriesLabel => 'TV series';
 
   @override
   String discoveryRuntimeFilterLabel(int minimum, int maximum) {

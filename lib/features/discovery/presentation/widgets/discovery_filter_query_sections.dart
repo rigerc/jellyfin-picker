@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
-import 'package:jellyfin_picker/core/media/entities/catalog_candidate.dart';
 import 'package:jellyfin_picker/core/media/entities/catalog_filter.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_filter_models.dart';
@@ -21,6 +20,24 @@ final class DiscoverySortFilterSection extends StatelessWidget {
       child: Column(
         spacing: CandySpacing.compact,
         children: <Widget>[
+          DropdownButtonFormField<String?>(
+            key: WidgetKeys.discoveryLibraryField,
+            isExpanded: true,
+            initialValue: data.libraryId,
+            decoration: InputDecoration(labelText: l10n.discoveryLibraryLabel),
+            items: <DropdownMenuItem<String?>>[
+              DropdownMenuItem<String?>(
+                child: Text(l10n.discoveryAllLibrariesLabel),
+              ),
+              ...data.libraries.map(
+                (library) => DropdownMenuItem<String?>(
+                  value: library.id,
+                  child: Text(library.name),
+                ),
+              ),
+            ],
+            onChanged: data.onLibraryChanged,
+          ),
           DropdownButtonFormField<CatalogSort>(
             key: WidgetKeys.discoverySortField,
             isExpanded: true,
@@ -65,6 +82,7 @@ final class DiscoverySortFilterSection extends StatelessWidget {
   static String _sortLabel(AppLocalizations l10n, CatalogSort value) =>
       switch (value) {
         CatalogSort.defaultOrder => l10n.discoverySortDefaultLabel,
+        CatalogSort.random => l10n.discoverySortRandomLabel,
         CatalogSort.recentlyAdded => l10n.discoverySortRecentlyAddedLabel,
         CatalogSort.title => l10n.discoverySortTitleLabel,
         CatalogSort.releaseYear => l10n.discoverySortReleaseYearLabel,
@@ -80,39 +98,4 @@ final class DiscoverySortFilterSection extends StatelessWidget {
         CatalogAddedWindow.threeHundredSixtyFiveDays =>
           l10n.discoveryAddedWithinYearLabel,
       };
-}
-
-final class DiscoveryMediaTypeFilterSection extends StatelessWidget {
-  const DiscoveryMediaTypeFilterSection({required this.data, super.key});
-
-  final DiscoveryMediaTypeFilterData data;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return DiscoveryFilterSection(
-      title: l10n.discoveryMediaTypeLabel,
-      icon: Icons.local_movies_outlined,
-      child: Wrap(
-        spacing: CandySpacing.compact,
-        runSpacing: CandySpacing.compact,
-        children: <Widget>[
-          FilterChip(
-            key: WidgetKeys.discoveryMovieFilter,
-            label: Text(l10n.discoveryMoviesLabel),
-            selected: data.selected.contains(CatalogMediaType.movie),
-            onSelected: (selected) =>
-                data.onChanged(CatalogMediaType.movie, selected),
-          ),
-          FilterChip(
-            key: WidgetKeys.discoverySeriesFilter,
-            label: Text(l10n.discoverySeriesLabel),
-            selected: data.selected.contains(CatalogMediaType.series),
-            onSelected: (selected) =>
-                data.onChanged(CatalogMediaType.series, selected),
-          ),
-        ],
-      ),
-    );
-  }
 }

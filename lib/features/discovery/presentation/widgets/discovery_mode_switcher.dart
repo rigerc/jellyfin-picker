@@ -6,6 +6,7 @@ import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
 import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_mode.dart';
 import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_state.dart';
+import 'package:jellyfin_picker/features/discovery/presentation/discovery_page.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_grid.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_shuffle.dart';
 import 'package:jellyfin_picker/features/discovery/presentation/widgets/discovery_swipe.dart';
@@ -13,11 +14,15 @@ import 'package:jellyfin_picker/features/discovery/presentation/widgets/discover
 final class DiscoveryModeSwitcher extends StatelessWidget {
   const DiscoveryModeSwitcher({
     this.onToggleFavorite,
+    this.onLoadDetails,
+    this.onLoadMore,
     this.imageHeaders = const <String, String>{},
     super.key,
   });
 
   final Future<bool> Function(CatalogCandidate candidate)? onToggleFavorite;
+  final CandidateDetailsLoader? onLoadDetails;
+  final Future<void> Function()? onLoadMore;
   final Map<String, String> imageHeaders;
 
   @override
@@ -37,16 +42,20 @@ final class DiscoveryModeSwitcher extends StatelessWidget {
             DiscoveryMode.grid => DiscoveryGrid(
               candidates: state.filteredCandidates,
               onToggleFavorite: onToggleFavorite,
+              onLoadDetails: onLoadDetails,
+              onLoadMore: onLoadMore,
               imageHeaders: imageHeaders,
             ),
             DiscoveryMode.swipe => DiscoverySwipe(
               candidates: state.undecidedCandidates,
               onToggleFavorite: onToggleFavorite,
+              onLoadDetails: onLoadDetails,
               imageHeaders: imageHeaders,
             ),
             DiscoveryMode.shuffle => DiscoveryShuffle(
               state: state,
               onToggleFavorite: onToggleFavorite,
+              onLoadDetails: onLoadDetails,
               imageHeaders: imageHeaders,
             ),
           },

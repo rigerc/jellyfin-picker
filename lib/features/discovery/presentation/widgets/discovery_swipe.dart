@@ -13,12 +13,14 @@ final class DiscoverySwipe extends StatelessWidget {
   const DiscoverySwipe({
     required this.candidates,
     this.onToggleFavorite,
+    this.onLoadDetails,
     this.imageHeaders = const <String, String>{},
     super.key,
   });
 
   final List<CatalogCandidate> candidates;
   final FavoriteToggle? onToggleFavorite;
+  final CandidateDetailsLoader? onLoadDetails;
   final Map<String, String> imageHeaders;
 
   @override
@@ -44,6 +46,7 @@ final class DiscoverySwipe extends StatelessWidget {
             child: DiscoveryCandidateCard(
               candidate: candidate,
               onToggleFavorite: onToggleFavorite,
+              onLoadDetails: onLoadDetails,
               imageHeaders: imageHeaders,
               posterFit: BoxFit.contain,
             ),
