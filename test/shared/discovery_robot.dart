@@ -109,6 +109,25 @@ final class DiscoveryRobot {
     expect(find.text(synopsis), findsOneWidget);
   }
 
+  void expectTrailerVisible(int index, String name) {
+    expect(find.byKey(WidgetKeys.discoveryTrailer(index)), findsOneWidget);
+    expect(find.text(name), findsOneWidget);
+  }
+
+  void expectTrailersNotVisible() {
+    expect(find.byKey(WidgetKeys.discoveryTrailer(0)), findsNothing);
+  }
+
+  Future<void> playTrailer(int index) async {
+    await tester.tap(find.byKey(WidgetKeys.discoveryTrailer(index)));
+    await tester.pumpAndSettle();
+  }
+
+  void expectNoMatchesVisible() {
+    expect(find.text('No titles fit yet'), findsOneWidget);
+    expect(find.text('Your library is unavailable'), findsNothing);
+  }
+
   void expectPosterBlurHashVisible(String id) {
     expect(find.byKey(WidgetKeys.discoveryPosterBlurHash(id)), findsOneWidget);
   }
@@ -362,11 +381,18 @@ final class DiscoveryRobot {
   }
 
   void expectCompactDiscoveryHeader({required int candidateCount}) {
-    expect(find.text('Jellyfilter'), findsNothing);
-    expect(find.text('Movie night starts here'), findsOneWidget);
+    expect(find.text('Jellyfilter'), findsOneWidget);
+    expect(find.text('Movie night starts here'), findsNothing);
     expect(find.text('$candidateCount title'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(WidgetKeys.discoveryFilterButton),
+        matching: find.byIcon(Icons.filter_list_rounded),
+      ),
+      findsOneWidget,
+    );
     _expectAssetImage('docs/icons/app-icon.png');
-    _expectAssetImage('docs/icons/filter-icon.png');
+    _expectAssetImageNotVisible('docs/icons/filter-icon.png');
   }
 
   void expectSearchArtworkVisible() {
@@ -471,6 +497,14 @@ final class DiscoveryRobot {
         .map((image) => image.image)
         .map(_assetName);
     expect(assetNames, contains(assetName));
+  }
+
+  void _expectAssetImageNotVisible(String assetName) {
+    final assetNames = tester
+        .widgetList<Image>(find.byType(Image))
+        .map((image) => image.image)
+        .map(_assetName);
+    expect(assetNames, isNot(contains(assetName)));
   }
 
   String? _assetName(ImageProvider provider) => switch (provider) {

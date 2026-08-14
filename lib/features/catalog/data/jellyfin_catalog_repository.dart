@@ -60,44 +60,57 @@ final class JellyfinCatalogRepository implements CatalogRepository {
         failure: IncompatibleCatalogFailure(),
       );
     }
-    final uri =
-        filter.sort == CatalogSort.defaultOrder &&
-            !filter.isActive &&
-            includedIds.isEmpty
-        ? _suggestionsUri(baseUrl, startIndex)
-        : _itemsUri(
-            baseUrl,
-            startIndex,
-            filter,
-            excludedIds: excludedIds,
-            includedIds: includedIds,
-          );
-    final request = await _get(uri);
-    final response = request.response;
-    if (response == null) {
-      return CatalogPage(
-        candidates: const <CatalogCandidate>[],
-        hasMore: false,
-        nextIndex: startIndex,
-        total: 0,
-        failure: request.failure,
+    final capturedUtcNow = (filter.dateWindowAnchor ?? _clock()).toUtc();
+    var requestedStartIndex = startIndex;
+    while (true) {
+      final uri =
+          filter.sort == CatalogSort.defaultOrder &&
+              !filter.isActive &&
+              includedIds.isEmpty
+          ? _suggestionsUri(baseUrl, requestedStartIndex)
+          : _itemsUri(
+              baseUrl,
+              requestedStartIndex,
+              filter,
+              excludedIds: excludedIds,
+              includedIds: includedIds,
+            );
+      final request = await _get(uri);
+      final response = request.response;
+      if (response == null) {
+        return CatalogPage(
+          candidates: const <CatalogCandidate>[],
+          hasMore: false,
+          nextIndex: requestedStartIndex,
+          total: 0,
+          failure: request.failure,
+        );
+      }
+      final decoded = _decodePage(response, requestedStartIndex);
+      if (decoded.failure != null) {
+        return CatalogPage(
+          candidates: const <CatalogCandidate>[],
+          hasMore: false,
+          nextIndex: requestedStartIndex,
+          total: decoded.total,
+          failure: decoded.failure,
+        );
+      }
+      final page = _catalogPage(
+        decoded,
+        filter,
+        capturedUtcNow: capturedUtcNow,
       );
+      final shouldContinueConjunctiveGenres =
+          filter.genres.length > 1 &&
+          page.candidates.isEmpty &&
+          page.failure == null &&
+          page.hasMore;
+      if (!shouldContinueConjunctiveGenres) {
+        return page;
+      }
+      requestedStartIndex = page.nextIndex;
     }
-    final decoded = _decodePage(response, startIndex);
-    if (decoded.failure != null) {
-      return CatalogPage(
-        candidates: const <CatalogCandidate>[],
-        hasMore: false,
-        nextIndex: startIndex,
-        total: decoded.total,
-        failure: decoded.failure,
-      );
-    }
-    return _catalogPage(
-      decoded,
-      filter,
-      capturedUtcNow: (filter.dateWindowAnchor ?? _clock()).toUtc(),
-    );
   }
 
   @override
@@ -455,6 +468,8 @@ final class JellyfinCatalogRepository implements CatalogRepository {
     )) {
       (0, _, _, _) when filter.isActive => const NoCatalogMatchFailure(),
       (0, _, _, _) => const NoAccessibleLibraryFailure(),
+      (_, true, _, _) when !hasMore && filter.isActive =>
+        const NoCatalogMatchFailure(),
       (_, _, true, _) => const PartialCatalogFailure(),
       (_, _, _, true) => const MissingMetadataCatalogFailure(),
       _ => null,
@@ -536,7 +551,7 @@ final class JellyfinCatalogRepository implements CatalogRepository {
         if (filter.favorite != null) 'isFavorite': '${filter.favorite}',
         if (minimumCommunity != null) 'minCommunityRating': '$minimumCommunity',
         if (minimumCritic != null) 'minCriticRating': '$minimumCritic',
-        if (genres.isNotEmpty) 'genres': genres.join('|'),
+        if (genres.isNotEmpty) 'genres': genres.first,
         if (years.isNotEmpty) 'years': years.join(','),
         if (filter.officialRatings.isNotEmpty)
           'officialRatings': (filter.officialRatings.toList()..sort()).join(
@@ -683,6 +698,7 @@ final class JellyfinCatalogRepository implements CatalogRepository {
                 .whereType<String>()
                 .toList(growable: false)
           : const <String>[],
+      trailers: _trailers(item['RemoteTrailers']),
       watched: _bool(userData['Played']),
       favorite: _bool(userData['IsFavorite']),
       poster: _image(
@@ -704,6 +720,33 @@ final class JellyfinCatalogRepository implements CatalogRepository {
         blurHash: _blurHash(blurHashes, 'Backdrop', backdropTag),
       ),
     );
+  }
+
+  List<CatalogTrailer> _trailers(Object? value) {
+    if (value is! List) {
+      return const <CatalogTrailer>[];
+    }
+    final seen = <Uri>{};
+    return value
+        .whereType<Map>()
+        .map(_parseTrailer)
+        .whereType<CatalogTrailer>()
+        .where((trailer) => seen.add(trailer.uri))
+        .toList(growable: false);
+  }
+
+  CatalogTrailer? _parseTrailer(Map<Object?, Object?> trailer) {
+    final rawUrl = _string(trailer['Url']);
+    if (rawUrl == null) {
+      return null;
+    }
+    final uri = Uri.tryParse(rawUrl);
+    if (uri == null ||
+        uri.host.isEmpty ||
+        (uri.scheme != 'https' && uri.scheme != 'http')) {
+      return null;
+    }
+    return CatalogTrailer(name: _string(trailer['Name']), uri: uri);
   }
 
   CatalogImage _image({

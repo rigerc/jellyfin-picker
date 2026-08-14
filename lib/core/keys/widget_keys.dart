@@ -70,6 +70,8 @@ abstract final class WidgetKeys {
 
   static Key discoveryFavorite(String id) => Key('discovery-favorite-$id');
 
+  static Key discoveryTrailer(int index) => Key('discovery-trailer-$index');
+
   static Key discoveryPosterBlurHash(String id) =>
       Key('discovery-poster-blurhash-$id');
 

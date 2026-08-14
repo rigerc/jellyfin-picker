@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:jellyfin_picker/composition/discovery_session_page.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
+import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_filter.dart';
 import 'package:jellyfin_picker/features/connection/domain/entities/stored_session.dart';
 import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_mode.dart';
 import 'package:jellyfin_picker/features/discovery/domain/entities/discovery_snapshot.dart';
@@ -165,6 +166,50 @@ void main() {
     await robot.reveal();
     await tester.pumpAndSettle();
     robot.expectCandidateVisible('Liked');
+  });
+
+  testWidgets('should show no matches when an accessible filter returns none', (
+    tester,
+  ) async {
+    final client = RecordingHttpClient((request) async {
+      if (request.url.path == '/UserViews') {
+        return _jsonResponse({
+          'Items': <Map<String, Object?>>[
+            <String, Object?>{
+              'Id': 'movies-id',
+              'Name': 'Movies',
+              'CollectionType': 'movies',
+            },
+          ],
+          'TotalRecordCount': 1,
+        });
+      }
+      if (request.url.path == '/Items/Filters' ||
+          request.url.path == '/Items/Filters2') {
+        return _jsonResponse(<String, Object?>{});
+      }
+      if (request.url.path == '/Items') {
+        return _jsonResponse({
+          'Items': <Map<String, Object?>>[],
+          'StartIndex': 0,
+          'TotalRecordCount': 0,
+        });
+      }
+      return http.Response('', 404);
+    });
+    final store = ImmediateDiscoveryStore()
+      ..snapshot = const DiscoverySnapshot(
+        filter: CatalogFilter(
+          libraryId: 'movies-id',
+          genres: <String>{'Documentary'},
+        ),
+      );
+    final robot = DiscoveryRobot(tester);
+
+    await tester.pumpWidget(_app(client, discoveryStore: store));
+    await tester.pumpAndSettle();
+
+    robot.expectNoMatchesVisible();
   });
 }
 

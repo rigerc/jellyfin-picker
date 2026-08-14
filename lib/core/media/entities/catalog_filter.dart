@@ -26,7 +26,7 @@ enum CatalogSort {
 
 enum CatalogSeriesStatus { continuing, ended }
 
-/// Filter dimensions are ANDed; values selected inside one dimension are ORed.
+/// Filter dimensions are ANDed; multi-valued attributes require every value.
 final class CatalogFilter {
   const CatalogFilter({
     Set<CatalogMediaType> mediaTypes = const <CatalogMediaType>{},
@@ -174,7 +174,7 @@ final class CatalogFilter {
     final candidateGenres = candidate.genres
         .map((genre) => genre.toLowerCase())
         .toSet();
-    return candidateGenres.intersection(selectedGenres).isNotEmpty;
+    return candidateGenres.containsAll(selectedGenres);
   }
 
   bool _matchesDecades(CatalogCandidate candidate) {

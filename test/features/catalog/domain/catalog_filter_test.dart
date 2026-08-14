@@ -27,7 +27,7 @@ void main() {
       maximumCommunityRating: 8,
       minimumCriticRating: 7,
       maximumCriticRating: 7,
-      genres: <String>{'Drama', 'Comedy'},
+      genres: <String>{'Drama', 'Candy'},
       decades: <int>{2020},
       watched: true,
       favorite: true,
@@ -36,7 +36,7 @@ void main() {
     expect(filter.matches(candidate), isTrue);
   });
 
-  test('should combine dimensions with AND and selected values with OR', () {
+  test('should require every selected genre while combining dimensions', () {
     const candidate = CatalogCandidate(
       id: 'movie-1',
       name: 'Movie',
@@ -56,6 +56,10 @@ void main() {
       const CatalogFilter(
         genres: <String>{'Drama', 'Comedy'},
       ).matches(candidate),
+      isFalse,
+    );
+    expect(
+      const CatalogFilter(genres: <String>{'Drama'}).matches(candidate),
       isTrue,
     );
   });
@@ -81,7 +85,7 @@ void main() {
       id: 'movie',
       name: 'Movie',
       mediaType: CatalogMediaType.movie,
-      genres: <String>{'drama'},
+      genres: <String>{'drama', 'COMEDY'},
       poster: CatalogImage.fallback(),
       backdrop: CatalogImage.fallback(),
     );
@@ -93,7 +97,7 @@ void main() {
       isTrue,
     );
     expect(
-      const CatalogFilter(genres: <String>{'Comedy'}).matches(candidate),
+      const CatalogFilter(genres: <String>{'Horror'}).matches(candidate),
       isFalse,
     );
   });

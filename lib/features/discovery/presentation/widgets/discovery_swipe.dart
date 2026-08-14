@@ -14,6 +14,7 @@ final class DiscoverySwipe extends StatelessWidget {
     required this.candidates,
     this.onToggleFavorite,
     this.onLoadDetails,
+    this.onOpenTrailer,
     this.imageHeaders = const <String, String>{},
     super.key,
   });
@@ -21,6 +22,7 @@ final class DiscoverySwipe extends StatelessWidget {
   final List<CatalogCandidate> candidates;
   final FavoriteToggle? onToggleFavorite;
   final CandidateDetailsLoader? onLoadDetails;
+  final TrailerLauncher? onOpenTrailer;
   final Map<String, String> imageHeaders;
 
   @override
@@ -47,6 +49,7 @@ final class DiscoverySwipe extends StatelessWidget {
               candidate: candidate,
               onToggleFavorite: onToggleFavorite,
               onLoadDetails: onLoadDetails,
+              onOpenTrailer: onOpenTrailer,
               imageHeaders: imageHeaders,
               posterFit: BoxFit.contain,
             ),

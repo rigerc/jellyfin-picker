@@ -15,6 +15,7 @@ final class DiscoveryCandidateCard extends StatelessWidget {
     required this.candidate,
     this.onToggleFavorite,
     this.onLoadDetails,
+    this.onOpenTrailer,
     this.imageHeaders = const <String, String>{},
     this.posterFit = BoxFit.cover,
     super.key,
@@ -23,6 +24,7 @@ final class DiscoveryCandidateCard extends StatelessWidget {
   final CatalogCandidate candidate;
   final FavoriteToggle? onToggleFavorite;
   final CandidateDetailsLoader? onLoadDetails;
+  final TrailerLauncher? onOpenTrailer;
   final Map<String, String> imageHeaders;
   final BoxFit posterFit;
 
@@ -38,6 +40,7 @@ final class DiscoveryCandidateCard extends StatelessWidget {
           context,
           candidate,
           onLoadDetails: onLoadDetails,
+          onOpenTrailer: onOpenTrailer,
         ),
         child: Card(
           clipBehavior: Clip.antiAlias,

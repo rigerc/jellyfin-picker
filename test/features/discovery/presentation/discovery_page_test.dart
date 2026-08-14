@@ -107,7 +107,42 @@ void main() {
     await tester.pumpAndSettle();
 
     robot.expectDetailsSynopsis('Loaded from Jellyfin.');
+    robot.expectTrailersNotVisible();
     expect(calls, 1);
+    await cubit.close();
+  });
+
+  testWidgets('should open a Jellyfin trailer from loaded movie details', (
+    tester,
+  ) async {
+    final cubit = _cubit();
+    await cubit.replaceCandidates(<CatalogCandidate>[
+      _candidate(overview: null),
+    ]);
+    final trailerUri = Uri.parse('https://trailers.example/movie-1');
+    final robot = DiscoveryRobot(tester);
+    Uri? launchedUri;
+
+    await _pumpPage(
+      tester,
+      cubit,
+      onLoadDetails: (candidate) async => _candidate(
+        trailers: <CatalogTrailer>[
+          CatalogTrailer(name: 'Official trailer', uri: trailerUri),
+        ],
+      ),
+      onOpenTrailer: (uri) async {
+        launchedUri = uri;
+        return true;
+      },
+    );
+    await robot.openFirstDetails();
+    await tester.pumpAndSettle();
+
+    robot.expectTrailerVisible(0, 'Official trailer');
+    await robot.playTrailer(0);
+
+    expect(launchedUri, trailerUri);
     await cubit.close();
   });
 
@@ -202,6 +237,7 @@ void main() {
   ) async {
     final cubit = _cubit();
     await cubit.replaceCandidates(<CatalogCandidate>[_candidate()]);
+    final robot = DiscoveryRobot(tester);
 
     await _pumpPage(tester, cubit);
     final header = find.ancestor(
@@ -213,9 +249,7 @@ void main() {
       tester.getSize(header).height,
       lessThanOrEqualTo(CandySpacing.minimumTouchTarget * 2),
     );
-    expect(find.text('Jellyfilter'), findsNothing);
-    expect(find.text('Movie night starts here'), findsOneWidget);
-    expect(find.text('1 title'), findsOneWidget);
+    robot.expectCompactDiscoveryHeader(candidateCount: 1);
     expect(find.byType(PopupMenuButton<void>), findsOneWidget);
     await cubit.close();
   });
@@ -764,6 +798,7 @@ Future<void> _pumpPage(
   DiscoveryCubit cubit, {
   Future<bool> Function(CatalogCandidate candidate)? onToggleFavorite,
   Future<CatalogCandidate?> Function(CatalogCandidate candidate)? onLoadDetails,
+  Future<bool> Function(Uri uri)? onOpenTrailer,
   Future<void> Function()? onLoadMore,
   List<CatalogLibrary> libraries = const <CatalogLibrary>[],
   CatalogFacets facets = const CatalogFacets(),
@@ -793,6 +828,7 @@ Future<void> _pumpPage(
         cubit: cubit,
         onToggleFavorite: onToggleFavorite,
         onLoadDetails: onLoadDetails,
+        onOpenTrailer: onOpenTrailer,
         onLoadMore: onLoadMore,
         libraries: libraries,
         facets: facets,
@@ -813,6 +849,7 @@ CatalogCandidate _candidate({
   String name = 'Candy Comet',
   CatalogImage? poster,
   String? overview = 'A warm mystery in space.',
+  List<CatalogTrailer> trailers = const <CatalogTrailer>[],
 }) => CatalogCandidate(
   id: id,
   name: name,
@@ -826,6 +863,7 @@ CatalogCandidate _candidate({
   status: 'Released',
   overview: overview,
   cast: const <String>['Ava Actor', 'Sam Star'],
+  trailers: trailers,
   watched: false,
   favorite: false,
   poster: poster ?? const CatalogImage.fallback(),

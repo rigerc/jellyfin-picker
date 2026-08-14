@@ -11,6 +11,7 @@ final class DiscoveryGrid extends StatelessWidget {
     required this.candidates,
     this.onToggleFavorite,
     this.onLoadDetails,
+    this.onOpenTrailer,
     this.onLoadMore,
     this.imageHeaders = const <String, String>{},
     super.key,
@@ -19,6 +20,7 @@ final class DiscoveryGrid extends StatelessWidget {
   final List<CatalogCandidate> candidates;
   final FavoriteToggle? onToggleFavorite;
   final CandidateDetailsLoader? onLoadDetails;
+  final TrailerLauncher? onOpenTrailer;
   final Future<void> Function()? onLoadMore;
   final Map<String, String> imageHeaders;
 
@@ -55,6 +57,7 @@ final class DiscoveryGrid extends StatelessWidget {
             candidate: candidates[index],
             onToggleFavorite: onToggleFavorite,
             onLoadDetails: onLoadDetails,
+            onOpenTrailer: onOpenTrailer,
             imageHeaders: imageHeaders,
           ),
         ),

@@ -271,7 +271,7 @@ abstract class AppLocalizations {
   /// No description provided for @discoveryTitle.
   ///
   /// In en, this message translates to:
-  /// **'Movie night starts here'**
+  /// **'Jellyfilter'**
   String get discoveryTitle;
 
   /// No description provided for @discoveryCandidateCount.
@@ -363,6 +363,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open details for {title}'**
   String discoveryDetailsLabel(String title);
+
+  /// No description provided for @discoveryTrailersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Trailers'**
+  String get discoveryTrailersLabel;
+
+  /// No description provided for @discoveryPlayTrailerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Play trailer'**
+  String get discoveryPlayTrailerLabel;
+
+  /// No description provided for @discoveryTrailerLaunchError.
+  ///
+  /// In en, this message translates to:
+  /// **'That trailer could not be opened. Try again.'**
+  String get discoveryTrailerLaunchError;
 
   /// No description provided for @discoveryNoCandidatesTitle.
   ///

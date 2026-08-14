@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:jellyfin_picker/core/assets/app_assets.dart';
 import 'package:jellyfin_picker/core/keys/widget_keys.dart';
 import 'package:jellyfin_picker/core/theme/candy_theme.dart';
 import 'package:jellyfin_picker/l10n/generated/app_localizations.dart';
@@ -19,19 +18,7 @@ final class DiscoveryHeaderActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final localization = AppLocalizations.of(context);
-    final filterIcon = ClipRRect(
-      borderRadius: BorderRadius.circular(CandyShapes.poster),
-      child: ExcludeSemantics(
-        child: Image.asset(
-          AppAssets.filterIcon,
-          width: CandyIconSize.action,
-          height: CandyIconSize.action,
-          cacheWidth: CandyImages.artworkCacheWidth,
-          fit: BoxFit.cover,
-          filterQuality: FilterQuality.high,
-        ),
-      ),
-    );
+    const filterIcon = Icon(Icons.filter_list_rounded);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[

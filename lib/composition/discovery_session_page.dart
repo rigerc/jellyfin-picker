@@ -10,6 +10,7 @@ import 'package:jellyfin_picker/features/catalog/application/catalog_cubit.dart'
 import 'package:jellyfin_picker/features/catalog/data/jellyfin_catalog_repository.dart';
 import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_facets.dart';
 import 'package:jellyfin_picker/features/catalog/domain/entities/catalog_filter.dart';
+import 'package:jellyfin_picker/features/catalog/domain/failures/catalog_failure.dart';
 import 'package:jellyfin_picker/features/connection/domain/entities/stored_session.dart';
 import 'package:jellyfin_picker/features/discovery/application/discovery_cubit.dart';
 import 'package:jellyfin_picker/features/discovery/application/random_discovery_selector.dart';
@@ -22,6 +23,7 @@ import 'package:jellyfin_picker/features/favorites/application/favorite_cubit.da
 import 'package:jellyfin_picker/features/favorites/data/jellyfin_favorite_repository.dart';
 import 'package:jellyfin_picker/features/persistence/data/shared_preferences_discovery_store.dart';
 import 'package:jellyfin_picker/l10n/generated/app_localizations.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final class DiscoverySessionPage extends StatefulWidget {
   const DiscoverySessionPage({
@@ -178,7 +180,9 @@ final class _DiscoverySessionPageState extends State<DiscoverySessionPage> {
           };
           final failedWithoutCandidates = switch (state) {
             CatalogLoaded(candidates: final values, failure: final failure) =>
-              values.isEmpty && failure != null,
+              values.isEmpty &&
+                  failure != null &&
+                  failure is! NoCatalogMatchFailure,
             _ => false,
           };
           if (failedWithoutCandidates) {
@@ -198,6 +202,7 @@ final class _DiscoverySessionPageState extends State<DiscoverySessionPage> {
                     : const CatalogFacets(),
                 onLoadMore: _catalogCubit.loadMore,
                 onLoadDetails: _loadDetails,
+                onOpenTrailer: _openTrailer,
                 imageHeaders: <String, String>{
                   'Authorization': MediaBrowserAuthorization.value(
                     deviceId: session.deviceId,
@@ -227,6 +232,9 @@ final class _DiscoverySessionPageState extends State<DiscoverySessionPage> {
 
   Future<CatalogCandidate?> _loadDetails(CatalogCandidate candidate) async =>
       (await _catalogCubit.loadDetails(candidate.id)).value;
+
+  Future<bool> _openTrailer(Uri uri) =>
+      launchUrl(uri, mode: LaunchMode.externalApplication);
 
   void _retry() => unawaited(_loadCatalog(_discoveryCubit.state));
 }
