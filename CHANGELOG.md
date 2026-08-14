@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.13 — 2026-08-14
+
+- Discover movies faster with personalized Jellyfin recommendations and
+  bounded Surprise batches that avoid recent decisions.
+- Focus exclusively on movies, choose an accessible movie library, and filter
+  with choices supplied by your Jellyfin server.
+- Browse large libraries sooner with incremental loading and full title details
+  fetched only when opened.
+- See smoother, correctly proportioned poster placeholders using Jellyfin image
+  metadata while preserving fallback artwork.
+
 ## 1.0.12 — 2026-08-13
 
 - Switch among Grid, Swipe, and Shuffle anytime from the persistent bottom
