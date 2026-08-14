@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.14 — 2026-08-14
+
+- Play trailers supplied by Jellyfin directly from movie details.
+- Combine multiple genre choices to find movies that match every selection.
+- Read controls clearly on dark purple surfaces in dark mode.
+- See a helpful no-matches state when filters return no movies, while genuine
+  library errors remain distinct.
+- Find filters through the familiar filter icon and see Jellyfilter named in
+  the discovery header.
+
 ## 1.0.13 — 2026-08-14
 
 - Discover movies faster with personalized Jellyfin recommendations and
