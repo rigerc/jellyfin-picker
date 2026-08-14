@@ -110,7 +110,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get connectionExploreLabel => 'Explore library';
 
   @override
-  String get discoveryTitle => 'Movie night starts here';
+  String get discoveryTitle => 'Jellyfilter';
 
   @override
   String discoveryCandidateCount(int count) {
@@ -168,6 +168,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String discoveryDetailsLabel(String title) {
     return 'Open details for $title';
   }
+
+  @override
+  String get discoveryTrailersLabel => 'Trailers';
+
+  @override
+  String get discoveryPlayTrailerLabel => 'Play trailer';
+
+  @override
+  String get discoveryTrailerLaunchError =>
+      'That trailer could not be opened. Try again.';
 
   @override
   String get discoveryNoCandidatesTitle => 'No titles fit yet';

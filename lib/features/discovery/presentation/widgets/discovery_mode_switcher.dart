@@ -15,6 +15,7 @@ final class DiscoveryModeSwitcher extends StatelessWidget {
   const DiscoveryModeSwitcher({
     this.onToggleFavorite,
     this.onLoadDetails,
+    this.onOpenTrailer,
     this.onLoadMore,
     this.imageHeaders = const <String, String>{},
     super.key,
@@ -22,6 +23,7 @@ final class DiscoveryModeSwitcher extends StatelessWidget {
 
   final Future<bool> Function(CatalogCandidate candidate)? onToggleFavorite;
   final CandidateDetailsLoader? onLoadDetails;
+  final TrailerLauncher? onOpenTrailer;
   final Future<void> Function()? onLoadMore;
   final Map<String, String> imageHeaders;
 
@@ -43,6 +45,7 @@ final class DiscoveryModeSwitcher extends StatelessWidget {
               candidates: state.filteredCandidates,
               onToggleFavorite: onToggleFavorite,
               onLoadDetails: onLoadDetails,
+              onOpenTrailer: onOpenTrailer,
               onLoadMore: onLoadMore,
               imageHeaders: imageHeaders,
             ),
@@ -50,12 +53,14 @@ final class DiscoveryModeSwitcher extends StatelessWidget {
               candidates: state.undecidedCandidates,
               onToggleFavorite: onToggleFavorite,
               onLoadDetails: onLoadDetails,
+              onOpenTrailer: onOpenTrailer,
               imageHeaders: imageHeaders,
             ),
             DiscoveryMode.shuffle => DiscoveryShuffle(
               state: state,
               onToggleFavorite: onToggleFavorite,
               onLoadDetails: onLoadDetails,
+              onOpenTrailer: onOpenTrailer,
               imageHeaders: imageHeaders,
             ),
           },

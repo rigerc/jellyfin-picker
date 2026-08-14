@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 /// Semantic colors for the violet-to-blue signature palette.
 abstract final class CandyColors {
   static const primary = Color(0xFF8B5CF6);
+  static const darkPrimary = Color(0xFF6D3DCC);
   static const secondaryBrand = Color(0xFF4257CE);
   static const accent = Color(0xFF7FE6D2);
   static const softAccent = Color(0xFFC9AEEE);
@@ -119,8 +120,8 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
   final isDark = brightness == Brightness.dark;
   final colorScheme = isDark
       ? const ColorScheme.dark(
-          primary: CandyColors.primary,
-          onPrimary: CandyColors.contrastInk,
+          primary: CandyColors.darkPrimary,
+          onPrimary: CandyColors.onDark,
           secondary: CandyColors.secondaryBrand,
           onSecondary: CandyColors.onDark,
           secondaryContainer: CandyColors.secondaryBrand,
@@ -234,13 +235,13 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
     chipTheme: ChipThemeData(
       color: WidgetStateProperty.resolveWith<Color?>(
         (states) =>
-            states.contains(WidgetState.selected) ? CandyColors.primary : null,
+            states.contains(WidgetState.selected) ? colorScheme.primary : null,
       ),
-      checkmarkColor: CandyColors.contrastInk,
+      checkmarkColor: colorScheme.onPrimary,
       labelStyle: textTheme.labelLarge?.copyWith(
         color: WidgetStateColor.resolveWith(
           (states) => states.contains(WidgetState.selected)
-              ? CandyColors.contrastInk
+              ? colorScheme.onPrimary
               : CandyColors.onDark,
         ),
       ),
@@ -290,20 +291,20 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: CandyColors.surface,
-      indicatorColor: CandyColors.primary,
+      indicatorColor: colorScheme.primary,
       indicatorShape: const StadiumBorder(),
       height: CandySpacing.minimumTouchTarget + CandySpacing.compact * 2,
       iconTheme: WidgetStateProperty.resolveWith<IconThemeData>(
         (states) => IconThemeData(
           color: states.contains(WidgetState.selected)
-              ? CandyColors.contrastInk
+              ? colorScheme.onPrimary
               : CandyColors.onDark,
         ),
       ),
       labelTextStyle: WidgetStateProperty.resolveWith<TextStyle?>(
         (states) => textTheme.labelMedium?.copyWith(
           color: states.contains(WidgetState.selected)
-              ? CandyColors.contrastInk
+              ? colorScheme.onPrimary
               : CandyColors.onDark,
         ),
       ),
@@ -312,12 +313,12 @@ ThemeData buildCandyTheme({Brightness brightness = Brightness.light}) {
       style: ButtonStyle(
         backgroundColor: WidgetStateProperty.resolveWith<Color?>(
           (states) => states.contains(WidgetState.selected)
-              ? CandyColors.primary
+              ? colorScheme.primary
               : null,
         ),
         foregroundColor: WidgetStateProperty.resolveWith<Color?>(
           (states) => states.contains(WidgetState.selected)
-              ? CandyColors.contrastInk
+              ? colorScheme.onPrimary
               : CandyColors.onDark,
         ),
         minimumSize: const WidgetStatePropertyAll<Size>(

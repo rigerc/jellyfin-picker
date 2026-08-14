@@ -8,11 +8,13 @@ void main() {
     () {
       final brandColors = (
         primary: CandyColors.primary,
+        darkPrimary: CandyColors.darkPrimary,
         secondary: CandyColors.secondaryBrand,
       );
 
       expect(brandColors, (
         primary: const Color(0xFF8B5CF6),
+        darkPrimary: const Color(0xFF6D3DCC),
         secondary: const Color(0xFF4257CE),
       ));
     },
@@ -38,7 +40,7 @@ void main() {
       ),
       (
         brightness: Brightness.dark,
-        primary: CandyColors.primary,
+        primary: CandyColors.darkPrimary,
         secondary: CandyColors.secondaryBrand,
       ),
     ]);
@@ -49,6 +51,7 @@ void main() {
     () {
       final palette = (
         primary: CandyColors.primary,
+        darkPrimary: CandyColors.darkPrimary,
         secondaryBrand: CandyColors.secondaryBrand,
         accent: CandyColors.accent,
         softAccent: CandyColors.softAccent,
@@ -61,6 +64,7 @@ void main() {
 
       expect(palette, (
         primary: const Color(0xFF8B5CF6),
+        darkPrimary: const Color(0xFF6D3DCC),
         secondaryBrand: const Color(0xFF4257CE),
         accent: const Color(0xFF7FE6D2),
         softAccent: const Color(0xFFC9AEEE),
@@ -126,7 +130,7 @@ void main() {
         bodyColor: CandyColors.onDark,
       ),
       (
-        onPrimary: CandyColors.contrastInk,
+        onPrimary: CandyColors.onDark,
         onSecondary: CandyColors.onDark,
         tertiary: CandyColors.accent,
         onTertiary: CandyColors.background,
@@ -199,12 +203,12 @@ void main() {
         usesStadiumShape: true,
       ),
       (
-        filterBackground: CandyColors.primary,
-        filterForeground: CandyColors.contrastInk,
+        filterBackground: CandyColors.darkPrimary,
+        filterForeground: CandyColors.onDark,
         filterUnselectedForeground: CandyColors.onDark,
-        filterCheckmark: CandyColors.contrastInk,
-        segmentedBackground: CandyColors.primary,
-        segmentedForeground: CandyColors.contrastInk,
+        filterCheckmark: CandyColors.onDark,
+        segmentedBackground: CandyColors.darkPrimary,
+        segmentedForeground: CandyColors.onDark,
         segmentedUnselectedForeground: CandyColors.onDark,
         minimumSize: const Size(0, CandySpacing.minimumTouchTarget),
         usesStadiumShape: true,
@@ -232,7 +236,7 @@ void main() {
       ),
       (
         background: CandyColors.surface,
-        indicator: CandyColors.primary,
+        indicator: CandyColors.darkPrimary,
         height: CandySpacing.minimumTouchTarget + CandySpacing.compact * 2,
       ),
     ]);
@@ -322,6 +326,10 @@ void main() {
     expect(theme.colorScheme.onSurface, CandyColors.onDark);
     expect(theme.scaffoldBackgroundColor, CandyColors.background);
     expect(theme.textTheme.bodyLarge?.color, CandyColors.onDark);
+    expect(
+      _contrastRatio(theme.colorScheme.primary, theme.colorScheme.onPrimary),
+      greaterThanOrEqualTo(4.5),
+    );
   });
 
   test(
@@ -398,4 +406,14 @@ void main() {
       expect(interpolated, same(original));
     },
   );
+}
+
+double _contrastRatio(Color background, Color foreground) {
+  final lighter = background.computeLuminance() > foreground.computeLuminance()
+      ? background.computeLuminance()
+      : foreground.computeLuminance();
+  final darker = background.computeLuminance() > foreground.computeLuminance()
+      ? foreground.computeLuminance()
+      : background.computeLuminance();
+  return (lighter + 0.05) / (darker + 0.05);
 }

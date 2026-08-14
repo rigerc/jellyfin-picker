@@ -14,6 +14,7 @@ final class DiscoveryShuffle extends StatelessWidget {
     required this.state,
     this.onToggleFavorite,
     this.onLoadDetails,
+    this.onOpenTrailer,
     this.imageHeaders = const <String, String>{},
     super.key,
   });
@@ -21,6 +22,7 @@ final class DiscoveryShuffle extends StatelessWidget {
   final DiscoveryState state;
   final FavoriteToggle? onToggleFavorite;
   final CandidateDetailsLoader? onLoadDetails;
+  final TrailerLauncher? onOpenTrailer;
   final Map<String, String> imageHeaders;
 
   @override
@@ -55,6 +57,7 @@ final class DiscoveryShuffle extends StatelessWidget {
                     candidate: candidate,
                     onToggleFavorite: onToggleFavorite,
                     onLoadDetails: onLoadDetails,
+                    onOpenTrailer: onOpenTrailer,
                     imageHeaders: imageHeaders,
                     posterFit: BoxFit.contain,
                   ),

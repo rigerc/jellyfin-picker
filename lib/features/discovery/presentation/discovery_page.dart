@@ -14,12 +14,14 @@ import 'package:jellyfin_picker/features/discovery/presentation/widgets/discover
 typedef FavoriteToggle = Future<bool> Function(CatalogCandidate candidate);
 typedef CandidateDetailsLoader =
     Future<CatalogCandidate?> Function(CatalogCandidate candidate);
+typedef TrailerLauncher = Future<bool> Function(Uri uri);
 
 final class DiscoveryPage extends StatelessWidget {
   const DiscoveryPage({
     required this.cubit,
     this.onToggleFavorite,
     this.onLoadDetails,
+    this.onOpenTrailer,
     this.onLoadMore,
     this.libraries = const <CatalogLibrary>[],
     this.facets = const CatalogFacets(),
@@ -30,6 +32,7 @@ final class DiscoveryPage extends StatelessWidget {
   final DiscoveryCubit cubit;
   final FavoriteToggle? onToggleFavorite;
   final CandidateDetailsLoader? onLoadDetails;
+  final TrailerLauncher? onOpenTrailer;
   final Future<void> Function()? onLoadMore;
   final List<CatalogLibrary> libraries;
   final CatalogFacets facets;
@@ -42,6 +45,7 @@ final class DiscoveryPage extends StatelessWidget {
       child: _DiscoveryView(
         onToggleFavorite: onToggleFavorite,
         onLoadDetails: onLoadDetails,
+        onOpenTrailer: onOpenTrailer,
         onLoadMore: onLoadMore,
         libraries: libraries,
         facets: facets,
@@ -58,11 +62,13 @@ final class _DiscoveryView extends StatelessWidget {
     required this.facets,
     this.onToggleFavorite,
     this.onLoadDetails,
+    this.onOpenTrailer,
     this.onLoadMore,
   });
 
   final FavoriteToggle? onToggleFavorite;
   final CandidateDetailsLoader? onLoadDetails;
+  final TrailerLauncher? onOpenTrailer;
   final Future<void> Function()? onLoadMore;
   final List<CatalogLibrary> libraries;
   final CatalogFacets facets;
@@ -95,6 +101,7 @@ final class _DiscoveryView extends StatelessWidget {
                 child: DiscoveryModeSwitcher(
                   onToggleFavorite: onToggleFavorite,
                   onLoadDetails: onLoadDetails,
+                  onOpenTrailer: onOpenTrailer,
                   onLoadMore: onLoadMore,
                   imageHeaders: imageHeaders,
                 ),

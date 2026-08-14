@@ -264,6 +264,16 @@ void main() {
         'People': <Map<String, Object?>>[
           <String, Object?>{'Name': 'Actor One', 'Type': 'Actor'},
         ],
+        'RemoteTrailers': <Map<String, Object?>>[
+          <String, Object?>{
+            'Name': 'Official trailer',
+            'Url': 'https://trailers.example/movie-1',
+          },
+          <String, Object?>{
+            'Name': 'Unsafe trailer',
+            'Url': 'javascript:alert(1)',
+          },
+        ],
       }),
     );
     final repository = JellyfinCatalogRepository(
@@ -278,9 +288,57 @@ void main() {
 
     expect(result.value?.overview, 'A richer synopsis.');
     expect(result.value?.cast, <String>['Actor One']);
+    expect(result.value?.trailers, <CatalogTrailer>[
+      CatalogTrailer(
+        name: 'Official trailer',
+        uri: Uri.parse('https://trailers.example/movie-1'),
+      ),
+    ]);
     expect(result.failure, isNull);
     expect(client.requests.single.url.path, '/jellyfin/Items/movie-1');
   });
+
+  test(
+    'should continue Jellyfin pages until every selected genre matches',
+    () async {
+      final client = RecordingHttpClient((request) async {
+        final startIndex = request.url.queryParameters['startIndex'];
+        return _jsonResponse({
+          'Items': <Map<String, Object?>>[
+            _movieJson(
+              id: startIndex == '0' ? 'drama-only' : 'both-genres',
+              genres: startIndex == '0'
+                  ? <String>['Drama']
+                  : <String>['Drama', 'Comedy'],
+            ),
+          ],
+          'StartIndex': int.parse(startIndex ?? '0'),
+          'TotalRecordCount': 2,
+        });
+      });
+      final repository = JellyfinCatalogRepository(
+        client: client,
+        serverUrl: 'https://example.test',
+        accessToken: 'token',
+        deviceId: 'device',
+        userId: 'user-id',
+        pageSize: 1,
+      );
+
+      final page = await repository.loadPage(
+        filter: const CatalogFilter(genres: <String>{'Drama', 'Comedy'}),
+      );
+
+      expect(page.candidates.single.id, 'both-genres');
+      expect(client.requests, hasLength(2));
+      expect(
+        client.requests.every(
+          (request) => request.url.queryParameters['genres'] == 'Comedy',
+        ),
+        isTrue,
+      );
+    },
+  );
 
   test('should type failures from discovery support endpoints', () async {
     JellyfinCatalogRepository repository(http.Client client) =>
@@ -974,7 +1032,7 @@ void main() {
     expect(query.containsKey('maxRuntime'), isFalse);
     expect(query.containsKey('maxCommunityRating'), isFalse);
     expect(query.containsKey('maxCriticRating'), isFalse);
-    expect(query['genres'], 'Comedy|Drama');
+    expect(query['genres'], 'Comedy');
     final years = query['years']!.split(',');
     expect(years, containsAll(<String>['2010', '2019', '2020', '2029']));
     expect(years, isNot(contains('2030')));
@@ -1218,13 +1276,16 @@ void main() {
   );
 }
 
-Map<String, Object?> _movieJson() => <String, Object?>{
-  'Id': 'movie-1',
+Map<String, Object?> _movieJson({
+  String id = 'movie-1',
+  List<String> genres = const <String>['Drama'],
+}) => <String, Object?>{
+  'Id': id,
   'Name': 'Candy Movie',
   'Type': 'Movie',
   'ProductionYear': 2024,
   'RunTimeTicks': 43200000000,
-  'Genres': <String>['Drama'],
+  'Genres': genres,
   'CommunityRating': 8.2,
   'CriticRating': 7.4,
   'OfficialRating': 'PG-13',
